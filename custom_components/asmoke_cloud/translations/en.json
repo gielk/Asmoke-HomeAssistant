@@ -1,0 +1,143 @@
+{
+  "title": "Asmoke Cloud",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Asmoke Cloud",
+        "description": "Enter your Asmoke device ID and MQTT broker credentials. If local auth defaults are present, the fields are prefilled automatically. Local auth detected: {local_auth}",
+        "data": {
+          "device_id": "Asmoke device ID",
+          "name": "Display name",
+          "host": "MQTT host",
+          "port": "MQTT port",
+          "username": "MQTT username",
+          "password": "MQTT password",
+          "keepalive": "MQTT keepalive"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update broker credentials",
+        "description": "Broker authentication failed. Update the broker settings to continue.",
+        "data": {
+          "host": "MQTT host",
+          "port": "MQTT port",
+          "username": "MQTT username",
+          "password": "MQTT password",
+          "keepalive": "MQTT keepalive"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the Asmoke MQTT broker",
+      "invalid_auth": "Broker authentication failed"
+    },
+    "abort": {
+      "already_configured": "This Asmoke device is already configured",
+      "reauth_successful": "Broker credentials updated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Asmoke options",
+        "data": {
+          "offline_timeout": "Offline timeout in seconds",
+          "extra_topics": "Additional MQTT topics to subscribe to",
+          "debug_logging": "Enable MQTT debug logging"
+        }
+      }
+    }
+  },
+  "services": {
+    "publish_raw_action": {
+      "name": "Publish raw action",
+      "description": "Publish a raw Asmoke action payload.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional config entry ID if multiple Asmoke integrations are loaded."
+        },
+        "device_id": {
+          "name": "Asmoke device ID",
+          "description": "Optional Asmoke device ID if multiple entries are loaded."
+        },
+        "command": {
+          "name": "Command",
+          "description": "Asmoke command name, for example Smoke."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "Optional JSON object or JSON string to use as the data field."
+        }
+      }
+    },
+    "set_smoke_target_temp": {
+      "name": "Set smoke target temperature",
+      "description": "Publish the confirmed Smoke target temperature command.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional config entry ID if multiple Asmoke integrations are loaded."
+        },
+        "device_id": {
+          "name": "Asmoke device ID",
+          "description": "Optional Asmoke device ID if multiple entries are loaded."
+        },
+        "target_temp": {
+          "name": "Target temperature",
+          "description": "Target grill temperature to publish with the Smoke command."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "grill_temperature_1": {
+        "name": "Grill temperature 1"
+      },
+      "grill_temperature_2": {
+        "name": "Grill temperature 2"
+      },
+      "probe_a_temperature": {
+        "name": "Probe A temperature"
+      },
+      "probe_b_temperature": {
+        "name": "Probe B temperature"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "roast_progress": {
+        "name": "Roast progress"
+      },
+      "target_time": {
+        "name": "Target time"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "wifi_status": {
+        "name": "Wi-Fi status"
+      },
+      "last_result_message": {
+        "name": "Last result message"
+      }
+    },
+    "binary_sensor": {
+      "broker_connected": {
+        "name": "Broker connected"
+      },
+      "device_online": {
+        "name": "Device online"
+      },
+      "ignition_status": {
+        "name": "Ignition active"
+      }
+    },
+    "number": {
+      "smoke_target_temperature": {
+        "name": "Smoke target temperature"
+      }
+    }
+  }
+}

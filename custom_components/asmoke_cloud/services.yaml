@@ -1,0 +1,41 @@
+publish_raw_action:
+  name: Publish raw action
+  description: Publish a raw Asmoke action payload to the vendor MQTT broker.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    device_id:
+      required: false
+      selector:
+        text:
+    command:
+      required: true
+      selector:
+        text:
+    payload:
+      required: false
+      selector:
+        text:
+
+set_smoke_target_temp:
+  name: Set smoke target temperature
+  description: Publish the confirmed Smoke target temperature command.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    device_id:
+      required: false
+      selector:
+        text:
+    target_temp:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: C

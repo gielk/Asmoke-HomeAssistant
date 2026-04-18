@@ -1,0 +1,21 @@
+{
+  "domain": "asmoke_cloud",
+  "name": "Asmoke Cloud",
+  "codeowners": [
+    "@gielk"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/gielk/Asmoke-HomeAssistant",
+  "integration_type": "device",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/gielk/Asmoke-HomeAssistant/issues",
+  "loggers": [
+    "custom_components.asmoke_cloud",
+    "paho"
+  ],
+  "requirements": [
+    "paho-mqtt>=2.1.0"
+  ],
+  "version": "0.1.0"
+}

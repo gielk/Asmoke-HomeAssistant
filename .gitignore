@@ -1,0 +1,9 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+docs/local-auth.md
+asmoke_cloud_local_auth.json
+captures/
+runtime/
+custom_components/asmoke_cloud/local_auth.json

@@ -1,0 +1,59 @@
+# Lokale Auth Notities
+
+Kopieer dit bestand lokaal naar `docs/local-auth.md`. Dat bestand staat in `.gitignore` en hoort niet in een publieke repo.
+
+## Broker
+
+- host: `<broker_host>`
+- port: `<broker_port>`
+- protocol: `MQTT 3.1.1`
+
+## App-auth
+
+- username: `<username>`
+- password: `<password>`
+- keepalive: `<keepalive>`
+- will topic: `<will_topic>`
+- will payload: `<will_payload>`
+
+## Client-id notities
+
+- captured app client-id voorbeeld: `<captured_client_id>`
+- aanbevolen Home Assistant patroon: `ha_asmoke_<device_id>` of `ha_asmoke_<timestamp>`
+
+## Device-notities
+
+- primary device id: `<device_id>`
+
+## Topicpatronen
+
+- status: `device/status/<device_id>`
+- temperatures: `device/temperatures/<device_id>`
+- result: `device/result/<device_id>`
+- commands: `asmoke/action/<device_id>`
+
+## Bevestigde payloadvoorbeelden
+
+### Command payload
+
+```json
+{"type":"action","command":"Smoke","data":{"targetTemp":110}}
+```
+
+### Result payload
+
+```json
+{"type":"result","status":1,"message":"Smoke mode updated: temperature."}
+```
+
+### Temperature payload
+
+```json
+{"grillTemp1":135,"grillTemp2":159,"probeATemp":499,"probeBTemp":499}
+```
+
+## Lokale validatie
+
+- directe broker connect getest: `<yes_or_no>`
+- read-only subscribe getest: `<yes_or_no>`
+- laatste validatiedatum: `<yyyy-mm-dd>`
