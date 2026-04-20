@@ -7,19 +7,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import AsmokeDataUpdateCoordinator
-from .services import async_register_services
 
-type AsmokeConfigEntry = ConfigEntry
+AsmokeConfigEntry = ConfigEntry
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    from .services import async_register_services
+
     hass.data.setdefault(DOMAIN, {})
     await async_register_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AsmokeConfigEntry) -> bool:
+    from .coordinator import AsmokeDataUpdateCoordinator
+    from .services import async_register_services
+
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = AsmokeDataUpdateCoordinator(hass, entry)
@@ -49,6 +52,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: AsmokeConfigEntry) 
 
 def async_get_coordinator(
     hass: HomeAssistant, entry_id: str
-) -> AsmokeDataUpdateCoordinator | None:
+) -> Any:
     entry_data: dict[str, Any] = hass.data.get(DOMAIN, {})
     return entry_data.get(entry_id)

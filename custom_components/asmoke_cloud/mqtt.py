@@ -8,10 +8,10 @@ import time
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import UTC, datetime
+from importlib import import_module
 from json import JSONDecodeError
 from typing import Any
 
-import paho.mqtt.client as mqtt
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -47,6 +47,15 @@ class AsmokeConnectionError(HomeAssistantError):
 
 class AsmokeAuthenticationError(AsmokeConnectionError):
     """Raised when broker authentication is rejected."""
+
+
+def _mqtt_module() -> Any:
+    try:
+        return import_module("paho.mqtt.client")
+    except ModuleNotFoundError as err:
+        raise AsmokeConnectionError(
+            "paho-mqtt is not available yet; restart Home Assistant and try again"
+        ) from err
 
 
 def _utcnow() -> datetime:
@@ -102,6 +111,7 @@ async def async_validate_broker_connection(config: Mapping[str, Any]) -> None:
 
 
 def _validate_broker_connection(config: dict[str, Any]) -> None:
+    mqtt = _mqtt_module()
     username = str(config.get(CONF_USERNAME, "")).strip()
     password = str(config.get(CONF_PASSWORD, "")).strip()
     host = str(config.get(CONF_HOST, "")).strip()
@@ -132,12 +142,12 @@ def _validate_broker_connection(config: dict[str, Any]) -> None:
         event.set()
 
     def on_disconnect(
-        _client: mqtt.Client,
+        _client: Any,
         _userdata: Any,
         rc: int,
         _properties: Any = None,
     ) -> None:
-        if result["rc"] is None and rc != mqtt.MQTT_ERR_SUCCESS:
+        if result["rc"] is None and rc != 0:
             result["error"] = rc
             event.set()
 
@@ -199,7 +209,7 @@ class AsmokeMqttRuntime:
         self.debug_logging = bool(options.get(CONF_DEBUG_LOGGING, False))
         self.client_id = _default_client_id(self.device_id, self.entry_id)
 
-        self._client: mqtt.Client | None = None
+        self._client: Any | None = None
         self._started = False
         self._update_callback: Callable[[dict[str, Any]], None] | None = None
         self._state: dict[str, Any] = {
@@ -247,6 +257,7 @@ class AsmokeMqttRuntime:
         if self._started:
             return
 
+        mqtt = _mqtt_module()
         client = mqtt.Client(client_id=self.client_id, protocol=mqtt.MQTTv311)
         client.username_pw_set(username=self.username, password=self.password)
         client.reconnect_delay_set(min_delay=5, max_delay=60)
@@ -302,7 +313,7 @@ class AsmokeMqttRuntime:
         message = json.dumps(payload, separators=(",", ":"))
         info = await asyncio.to_thread(self._client.publish, topic, message, 0, False)
 
-        if info.rc != mqtt.MQTT_ERR_SUCCESS:
+        if info.rc != 0:
             raise AsmokeConnectionError(f"MQTT publish failed with rc={info.rc}")
 
     def snapshot(self) -> dict[str, Any]:
@@ -330,7 +341,7 @@ class AsmokeMqttRuntime:
 
     def _on_connect(
         self,
-        _client: mqtt.Client,
+        _client: Any,
         _userdata: Any,
         _flags: dict[str, Any],
         rc: int,
@@ -340,7 +351,7 @@ class AsmokeMqttRuntime:
 
     def _on_disconnect(
         self,
-        _client: mqtt.Client,
+        _client: Any,
         _userdata: Any,
         rc: int,
         _properties: Any = None,
@@ -349,9 +360,9 @@ class AsmokeMqttRuntime:
 
     def _on_message(
         self,
-        _client: mqtt.Client,
+        _client: Any,
         _userdata: Any,
-        message: mqtt.MQTTMessage,
+        message: Any,
     ) -> None:
         self.hass.loop.call_soon_threadsafe(
             self._handle_message,
@@ -371,7 +382,7 @@ class AsmokeMqttRuntime:
 
     def _handle_disconnect(self, rc: int) -> None:
         self._state["broker_connected"] = False
-        if rc not in {0, mqtt.MQTT_ERR_SUCCESS}:
+        if rc != 0:
             self._state["last_error"] = f"disconnect_rc_{rc}"
         self._push_update()
 
