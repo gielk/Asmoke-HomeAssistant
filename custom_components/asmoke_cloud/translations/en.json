@@ -168,6 +168,11 @@
         "name": "Stop cook"
       }
     },
+    "climate": {
+      "pit_controller": {
+        "name": "Pit thermostat"
+      }
+    },
     "sensor": {
       "grill_temperature_1": {
         "name": "Grill temperature 1"
@@ -212,12 +217,6 @@
       }
     },
     "number": {
-      "smoke_target_temperature": {
-        "name": "Smoke target temperature"
-      },
-      "quick_target_temperature": {
-        "name": "Quick target temperature"
-      },
       "quick_target_time": {
         "name": "Quick target time"
       }

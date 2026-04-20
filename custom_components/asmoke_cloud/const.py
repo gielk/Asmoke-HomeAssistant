@@ -13,9 +13,12 @@ from homeassistant.const import (
 
 DOMAIN = "asmoke_cloud"
 NAME = "Asmoke Cloud"
+DEFAULT_CLIMATE_PRESET_MODE = "smoke"
+CLIMATE_PRESET_MODES: tuple[str, str] = ("smoke", "quick")
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.NUMBER,

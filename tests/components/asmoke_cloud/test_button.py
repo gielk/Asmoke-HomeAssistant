@@ -38,7 +38,7 @@ async def test_stop_cook_button_presses_confirmed_stop(
     coordinator.runtime.async_publish_stop.assert_awaited_once_with()
 
 
-async def test_quick_button_uses_quick_number_entity_values(
+async def test_quick_button_uses_shared_climate_target_and_quick_time(
     hass,
     mock_entry,
     bypass_runtime_start,
@@ -52,10 +52,10 @@ async def test_quick_button_uses_quick_number_entity_values(
     coordinator.runtime.async_publish_cook_start = AsyncMock()
 
     entity_registry = er.async_get(hass)
-    temp_entity_id = entity_registry.async_get_entity_id(
-        "number",
+    climate_entity_id = entity_registry.async_get_entity_id(
+        "climate",
         DOMAIN,
-        f"{coordinator.runtime.device_id}_quick_target_temperature",
+        f"{coordinator.runtime.device_id}_pit_controller",
     )
     time_entity_id = entity_registry.async_get_entity_id(
         "number",
@@ -68,14 +68,14 @@ async def test_quick_button_uses_quick_number_entity_values(
         f"{coordinator.runtime.device_id}_start_quick_cook",
     )
 
-    assert temp_entity_id is not None
+    assert climate_entity_id is not None
     assert time_entity_id is not None
     assert button_entity_id is not None
 
     await hass.services.async_call(
-        "number",
-        "set_value",
-        {"entity_id": temp_entity_id, "value": 165},
+        "climate",
+        "set_temperature",
+        {"entity_id": climate_entity_id, "temperature": 165},
         blocking=True,
     )
     await hass.services.async_call(

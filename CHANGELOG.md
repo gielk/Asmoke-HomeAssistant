@@ -6,6 +6,12 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.3 - 2026-04-20
+
+- Added a climate entity with one shared target temperature and selectable `smoke` or `quick` preset modes.
+- Removed the separate Smoke and Quick target temperature number entities to reduce control duplication.
+- Kept Quick target time as the remaining mode-specific input and wired the Quick button to the shared climate target temperature.
+
 ## v0.4.0-beta.2 - 2026-04-20
 
 - Added a `Stop cook` press button entity.

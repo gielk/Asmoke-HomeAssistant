@@ -20,7 +20,8 @@ De integration:
 - leest temperatuur-, status- en result-berichten;
 - maakt entities aan in Home Assistant;
 - ondersteunt bevestigde write-acties voor smoke, quick, roast en stop-cook bediening;
-- maakt een `Stop cook` button-entity en een `Start quick cook` button-entity aan, plus instelbare Quick-waarden via number-entities;
+- maakt een climate-entity aan met een gedeelde target temperature en `smoke`/`quick` modekeuze, plus een aparte Quick target time number-entity;
+- houdt daarnaast een `Stop cook` button-entity en een `Start quick cook` button-entity beschikbaar;
 - blijft laden als de BBQ uit staat.
 
 ## Snelle start
@@ -48,7 +49,7 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.2`.
+Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.3`.
 
 De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
 

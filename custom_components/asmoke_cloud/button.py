@@ -38,7 +38,7 @@ class AsmokeQuickCookButton(AsmokeActionButton):
         super().__init__(coordinator, "start_quick_cook")
 
     async def async_press(self) -> None:
-        settings = self.coordinator.quick_settings
+        settings = self.coordinator.cook_settings
         await self.coordinator.runtime.async_publish_cook_start(
             "quick",
             settings.target_temp,

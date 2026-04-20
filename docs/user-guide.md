@@ -116,17 +116,20 @@ Je kunt in deze eerste versie:
 - zien of de brokerverbinding actief is;
 - zien of het device recent berichten heeft gestuurd;
 - een cook starten in bevestigde `smoke`-, `quick`- of `roast`-modus;
+- `smoke` en `quick` bedienen via een climate-entity met een gedeelde doeltemperatuur;
 - een lopende cook stoppen;
 - een `Stop cook` button direct vanaf het device-scherm gebruiken;
 - een `Start quick cook` button gebruiken met vooraf ingestelde Quick-waarden;
-- de smoke target temperature aanpassen;
+- de Quick target time apart instellen voor Quick-modus;
 - een raw action publiceren voor gecontroleerde experimenten.
 
 Praktisch betekent dat:
 
+- er nog maar één gedeelde target temperature is voor `smoke` en `quick`;
+- je de gewenste cook-modus kiest via de climate preset `smoke` of `quick`;
 - `Stop cook` direct als press button beschikbaar is;
 - `Start quick cook` direct als press button beschikbaar is;
-- Quick `target_temp` en `target_time` via number-entities ingesteld kunnen worden vóór je de Quick-button indrukt;
+- alleen Quick `target_time` nog als aparte number-entity ingesteld wordt;
 - je voor bevestigde acties niet altijd ruwe JSON hoeft te sturen;
 - je voor onbevestigde functies nog steeds `publish_raw_action` kunt gebruiken.
 
@@ -157,7 +160,7 @@ Beschikbare services:
 
 ### set_smoke_target_temp
 
-Gebruik deze service of de number-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
+Gebruik deze service of de climate-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
 
 Benodigd:
 
@@ -172,25 +175,63 @@ action:
       target_temp: 110
 ```
 
+### Climate entity
+
+De integratie maakt nu een climate-entity aan voor de pit-bediening.
+
+Daarin zitten:
+
+- één gedeelde target temperature voor `smoke` en `quick`;
+- een moduskiezer via climate preset modes `smoke` en `quick`;
+- `off` en `heat` als climate HVAC-modes.
+
+Praktisch gebruik:
+
+- kies preset `smoke` als je een gewone smoke-cook wilt starten;
+- kies preset `quick` als je een quick-cook wilt starten;
+- stel de temperatuur in via de climate target temperature;
+- zet daarna de climate op `heat` om de gekozen modus te starten;
+- zet de climate op `off` om een stop-commando te sturen.
+
+Voorbeeld YAML voor Smoke via climate:
+
+```yaml
+action:
+  - service: climate.set_preset_mode
+    target:
+      entity_id: climate.asmoke_pit_thermostat
+    data:
+      preset_mode: smoke
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.asmoke_pit_thermostat
+    data:
+      temperature: 110
+  - service: climate.set_hvac_mode
+    target:
+      entity_id: climate.asmoke_pit_thermostat
+    data:
+      hvac_mode: heat
+```
+
 ### Quick button entities
 
 Voor Quick zijn nu ook entities beschikbaar:
 
-- een number-entity voor `Quick target temperature`;
 - een number-entity voor `Quick target time`;
 - een press button `Start quick cook`.
 
-Je stelt eerst de twee Quick number-waarden in en drukt daarna op de Quick-button. Die button publiceert vervolgens de bevestigde Quick-payload met de huidige entitywaarden.
+Je stelt eerst de climate target temperature en de Quick target time in en drukt daarna op de Quick-button. Die button publiceert vervolgens de bevestigde Quick-payload met die huidige waarden.
 
 Voorbeeld YAML om de Quick-button te gebruiken:
 
 ```yaml
 action:
-  - service: number.set_value
+  - service: climate.set_temperature
     target:
-      entity_id: number.asmoke_backyard_quick_target_temperature
+      entity_id: climate.asmoke_backyard_pit_thermostat
     data:
-      value: 160
+      temperature: 160
   - service: number.set_value
     target:
       entity_id: number.asmoke_backyard_quick_target_time
@@ -204,6 +245,8 @@ action:
 ### Stop button entity
 
 Naast de service is er nu ook een press button `Stop cook`. Die publiceert dezelfde bevestigde Stop-actie, maar is handiger voor direct gebruik vanaf het device-scherm of een dashboard.
+
+Als je liever volledig via climate werkt, kun je ook `climate.set_hvac_mode` met `off` gebruiken.
 
 Voorbeeld YAML om de Stop-button te gebruiken:
 
@@ -319,8 +362,7 @@ action:
 
 Naast services maakt de integratie ook directe bedienings-entities aan:
 
-- `number.<naam>_smoke_target_temperature`
-- `number.<naam>_quick_target_temperature`
+- `climate.<naam>_pit_thermostat`
 - `number.<naam>_quick_target_time`
 - `button.<naam>_start_quick_cook`
 - `button.<naam>_stop_cook`

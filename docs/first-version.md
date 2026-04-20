@@ -16,8 +16,9 @@ Deze eerste versie werkt voor:
 10. een bevestigde stop-actie voor een lopende cook;
 11. een raw action service voor gevorderd gebruik;
 12. blijven laden als de BBQ uit staat;
-13. een `Stop cook` button-entity en een `Start quick cook` button-entity;
-14. lokale Quick-invoer via number-entities voor target temperature en target time.
+13. een climate-entity met een gedeelde target temperature en `smoke`/`quick` modekeuze;
+14. een `Stop cook` button-entity en een `Start quick cook` button-entity;
+15. lokale Quick-invoer via een number-entity voor target time.
 
 ## Entities in versie 1
 
@@ -34,8 +35,7 @@ Beschikbare entitytypes:
 - binary sensor voor broker connected;
 - binary sensor voor device online;
 - binary sensor voor ignition active;
-- number entity voor smoke target temperature;
-- number entity voor quick target temperature;
+- climate entity voor pit thermostat;
 - number entity voor quick target time;
 - button entity voor stop cook;
 - button entity voor start quick cook.
@@ -44,12 +44,14 @@ Beschikbare entitytypes:
 
 Bevestigd en ingebouwd:
 
-- smoke target temperature via de number-entity;
-- quick target temperature via een aparte number-entity;
+- smoke en quick via een gedeelde climate target temperature;
+- smoke en quick modekeuze via climate preset modes;
 - quick target time via een aparte number-entity;
 - smoke target temperature via `asmoke_cloud.set_smoke_target_temp`.
 - cook start via `asmoke_cloud.start_cook` met bevestigde `smoke`, `quick` en `roast` modi;
 - cook stop via `asmoke_cloud.stop_cook`.
+- smoke start via de climate-entity in `smoke` preset;
+- quick start via de climate-entity in `quick` preset;
 - stop cook via een press button-entity;
 - quick start via een press button-entity die de Quick number-waarden gebruikt.
 
