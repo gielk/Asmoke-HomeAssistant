@@ -45,6 +45,28 @@ De BBQ hoeft niet aan te staan om de integration te installeren. Als de BBQ uit 
    MQTT keepalive
 6. Rond de config flow af.
 
+## Waar haal je deze gegevens vandaan?
+
+Je haalt deze gegevens niet uit Home Assistant zelf. Voor deze Asmoke integration komen ze uit de Asmoke app-verkeersanalyse of uit een lokaal bestand waarin je ze eerder hebt opgeslagen.
+
+Voor jouw huidige Asmoke-opstelling zijn deze waarden al eerder bevestigd:
+
+- `device_id`: jouw Asmoke device-id
+- `host`: de Asmoke MQTT broker host
+- `port`: de Asmoke MQTT broker poort
+- `username`: de Asmoke app MQTT username
+- `password`: de Asmoke app MQTT password
+- `keepalive`: de gebruikte MQTT keepalive
+
+Als je deze waarden al eerder hebt vastgelegd, is de makkelijkste route om ze lokaal te laten voorinvullen via een `local_auth.json` bestand. Dan hoef je ze in de config flow niet handmatig over te typen.
+
+Als je ze nog niet hebt, dan zijn er praktisch twee routes:
+
+1. gebruik de eerder lokaal vastgelegde waarden uit je reverse-engineeringnotities;
+2. of herhaal een packet capture / MITM-analyse om de app-verbinding opnieuw te bevestigen.
+
+De integration zelf ontdekt deze waarden in versie 1 nog niet automatisch.
+
 ## Optioneel: lokaal laten voorinvullen
 
 Als je de brokergegevens niet steeds wilt invullen, kun je lokaal een bestand gebruiken dat niet naar Git hoort te gaan.
