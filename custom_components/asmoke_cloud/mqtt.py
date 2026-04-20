@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_OFFLINE_TIMEOUT,
     DEFAULT_TARGET_TEMPERATURE,
     action_topic,
+    roast_topic,
     result_topic,
     status_topic,
     temperatures_topic,
@@ -446,6 +447,7 @@ class AsmokeMqttRuntime:
             status_topic(self.device_id),
             temperatures_topic(self.device_id),
             result_topic(self.device_id),
+            roast_topic(self.device_id),
         ]
         topics.extend(self.extra_topics)
         return topics
@@ -497,11 +499,66 @@ class AsmokeMqttRuntime:
 
         await self.async_publish_json(action_topic(self.device_id), payload)
 
+    async def async_publish_cook_start(
+        self,
+        mode: str,
+        target_temp: int,
+        target_time: int | None = None,
+        probe_temp: int | None = None,
+        ingredient_category: str | None = None,
+        k_value: str | None = None,
+    ) -> None:
+        normalized_mode = str(mode).strip().lower()
+
+        if normalized_mode == "smoke":
+            await self.async_publish_action(
+                "Smoke",
+                {"targetTemp": int(target_temp)},
+            )
+            return
+
+        if normalized_mode == "quick":
+            if target_time is None:
+                raise ValueError("target_time is required for quick mode")
+
+            await self.async_publish_action(
+                "Quick",
+                {
+                    "targetTemp": int(target_temp),
+                    "targetTime": int(target_time),
+                },
+            )
+            return
+
+        if normalized_mode == "roast":
+            if target_time is None:
+                raise ValueError("target_time is required for roast mode")
+            if probe_temp is None:
+                raise ValueError("probe_temp is required for roast mode")
+            if ingredient_category is None:
+                raise ValueError("ingredient_category is required for roast mode")
+            if k_value is None:
+                raise ValueError("k_value is required for roast mode")
+
+            await self.async_publish_action(
+                "Roast",
+                {
+                    "targetTemp": int(target_temp),
+                    "targetTime": int(target_time),
+                    "probeTemp": int(probe_temp),
+                    "kValue": str(k_value),
+                    "ingredientCategory": str(ingredient_category),
+                },
+            )
+            return
+
+        raise ValueError(f"Unsupported cook mode: {mode}")
+
+    async def async_publish_stop(self) -> None:
+        await self.async_publish_action("Stop")
+
     async def async_publish_smoke_target_temp(self, target_temp: int) -> None:
-        await self.async_publish_action(
-            "Smoke",
-            {"targetTemp": int(target_temp)},
-        )
+        await self.async_publish_cook_start("smoke", target_temp)
 
     async def async_publish_json(self, topic: str, payload: Mapping[str, Any]) -> None:
         if self._client is None:

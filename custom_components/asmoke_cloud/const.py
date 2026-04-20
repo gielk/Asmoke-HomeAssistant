@@ -39,13 +39,21 @@ ACTION_TOPIC_TEMPLATE = "asmoke/action/{device_id}"
 STATUS_TOPIC_TEMPLATE = "device/status/{device_id}"
 TEMPERATURES_TOPIC_TEMPLATE = "device/temperatures/{device_id}"
 RESULT_TOPIC_TEMPLATE = "device/result/{device_id}"
+ROAST_TOPIC_TEMPLATE = "device/roast/{device_id}"
 
 SERVICE_PUBLISH_RAW_ACTION = "publish_raw_action"
+SERVICE_START_COOK = "start_cook"
+SERVICE_STOP_COOK = "stop_cook"
 SERVICE_SET_SMOKE_TARGET_TEMP = "set_smoke_target_temp"
 
 ATTR_ENTRY_ID = "entry_id"
+ATTR_INGREDIENT_CATEGORY = "ingredient_category"
+ATTR_K_VALUE = "k_value"
+ATTR_MODE = "mode"
 ATTR_PAYLOAD = "payload"
+ATTR_PROBE_TEMP = "probe_temp"
 ATTR_TARGET_TEMP = "target_temp"
+ATTR_TARGET_TIME = "target_time"
 
 LOCAL_AUTH_FILE = "local_auth.json"
 LOCAL_AUTH_CONFIG_FILE = f"{DOMAIN}_local_auth.json"
@@ -79,3 +87,7 @@ def temperatures_topic(device_id: str) -> str:
 
 def result_topic(device_id: str) -> str:
     return RESULT_TOPIC_TEMPLATE.format(device_id=device_id)
+
+
+def roast_topic(device_id: str) -> str:
+    return ROAST_TOPIC_TEMPLATE.format(device_id=device_id)

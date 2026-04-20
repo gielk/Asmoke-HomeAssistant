@@ -39,3 +39,69 @@ set_smoke_target_temp:
           max: 300
           step: 1
           unit_of_measurement: C
+
+start_cook:
+  name: Start cook
+  description: Start a confirmed Asmoke cook mode. Use smoke for target temperature only, quick for target temperature plus target time, or roast with the exact confirmed roast fields.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    device_id:
+      required: false
+      selector:
+        text:
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - smoke
+            - quick
+            - roast
+    target_temp:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: C
+    target_time:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1440
+          step: 1
+          unit_of_measurement: min
+    probe_temp:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: C
+    ingredient_category:
+      required: false
+      selector:
+        text:
+    k_value:
+      required: false
+      selector:
+        text:
+
+stop_cook:
+  name: Stop cook
+  description: Publish the confirmed Asmoke stop command.
+  fields:
+    entry_id:
+      required: false
+      selector:
+        text:
+    device_id:
+      required: false
+      selector:
+        text:

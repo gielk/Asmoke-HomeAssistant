@@ -19,7 +19,7 @@ De integration:
 - kan het `device_id` automatisch ontdekken via een tijdelijke MQTT discovery-stap;
 - leest temperatuur-, status- en result-berichten;
 - maakt entities aan in Home Assistant;
-- ondersteunt een eerste bevestigde write-actie voor smoke target temperature;
+- ondersteunt bevestigde write-acties voor smoke, quick, roast en stop-cook bediening;
 - blijft laden als de BBQ uit staat.
 
 ## Snelle start
@@ -45,7 +45,9 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-releases voor HACS. De huidige release is `v0.3.3`.
+Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.1`.
+
+De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
 
 Het overzicht van functionele releases staat in [CHANGELOG.md](CHANGELOG.md).
 

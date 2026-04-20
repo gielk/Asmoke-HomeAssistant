@@ -115,6 +115,8 @@ Je kunt in deze eerste versie:
 - temperatuur- en statusdata uitlezen;
 - zien of de brokerverbinding actief is;
 - zien of het device recent berichten heeft gestuurd;
+- een cook starten in bevestigde `smoke`-, `quick`- of `roast`-modus;
+- een lopende cook stoppen;
 - de smoke target temperature aanpassen;
 - een raw action publiceren voor gecontroleerde experimenten.
 
@@ -134,11 +136,35 @@ Praktisch betekent dat:
 Beschikbare services:
 
 1. `asmoke_cloud.set_smoke_target_temp`
-2. `asmoke_cloud.publish_raw_action`
+2. `asmoke_cloud.start_cook`
+3. `asmoke_cloud.stop_cook`
+4. `asmoke_cloud.publish_raw_action`
 
 ### set_smoke_target_temp
 
 Gebruik deze service of de number-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
+
+### start_cook
+
+Gebruik deze service om een bevestigde cook-modus te starten.
+
+Bevestigde waarden voor `mode`:
+
+- `smoke`: vereist `target_temp`;
+- `quick`: vereist `target_temp` en `target_time`.
+- `roast`: vereist `target_temp`, `target_time`, `probe_temp`, `ingredient_category` en `k_value`.
+
+De integratie vertaalt dit naar de bevestigde vendorpayloads:
+
+- `smoke` -> `{"type":"action","command":"Smoke","data":{"targetTemp":...}}`
+- `quick` -> `{"type":"action","command":"Quick","data":{"targetTemp":...,"targetTime":...}}`
+- `roast` -> `{"type":"action","command":"Roast","data":{"targetTemp":...,"targetTime":...,"probeTemp":...,"kValue":"...","ingredientCategory":"..."}}`
+
+De huidige Roast-ondersteuning blijft bewust strikt: de integratie exposeert alleen de exact bevestigde velden uit de capture en vult geen onbevestigde defaults in.
+
+### stop_cook
+
+Gebruik deze service om een lopende cook te stoppen. De integratie publiceert hiervoor de bevestigde vendoractie `{"type":"action","command":"Stop"}`.
 
 ### publish_raw_action
 

@@ -4,6 +4,14 @@ This repository uses semantic versioning for functional HACS releases.
 
 Changelog entries should stay user-facing, concise, and written in English.
 
+## Unreleased
+
+## v0.4.0-beta.1 - 2026-04-20
+
+- Added confirmed `start_cook` and `stop_cook` services for the newly verified Asmoke control routes.
+- Added support for `smoke`, `quick`, and `roast` start actions with vendor payloads that match the captured app traffic.
+- Added the confirmed `device/roast/<device_id>` topic to the default runtime subscriptions.
+
 ## v0.3.3 - 2026-04-20
 
 - Added local Home Assistant brand assets for `asmoke_cloud`.

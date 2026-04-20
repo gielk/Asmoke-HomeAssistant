@@ -12,9 +12,10 @@ Deze eerste versie werkt voor:
 6. entities aanmaken voor de belangrijkste telemetrie;
 7. diagnostics met redactie van gevoelige data;
 8. options flow voor debug logging, extra topics en offline timeout;
-9. een bevestigde write-actie voor smoke target temperature;
-10. een raw action service voor gevorderd gebruik;
-11. blijven laden als de BBQ uit staat.
+9. bevestigde start-acties voor smoke, quick en roast cook;
+10. een bevestigde stop-actie voor een lopende cook;
+11. een raw action service voor gevorderd gebruik;
+12. blijven laden als de BBQ uit staat.
 
 ## Entities in versie 1
 
@@ -39,6 +40,8 @@ Bevestigd en ingebouwd:
 
 - smoke target temperature via de number-entity;
 - smoke target temperature via `asmoke_cloud.set_smoke_target_temp`.
+- cook start via `asmoke_cloud.start_cook` met bevestigde `smoke`, `quick` en `roast` modi;
+- cook stop via `asmoke_cloud.stop_cook`.
 
 ## Bekende datainterpretaties in versie 1
 
@@ -50,7 +53,7 @@ Bevestigd en ingebouwd:
 Nog niet volledig uitgewerkt in versie 1:
 
 1. volledig hands-off onboarding zonder brokercredentials;
-2. brede ondersteuning voor alle Asmoke-modi en commando's;
+2. brede ondersteuning voor alle Asmoke-modi en commando's buiten `smoke`, `quick`, `roast` en `stop`;
 3. volledige mapping van alle statusvelden;
 4. bevestigde firmwareversie-uitlezing;
 5. firmware-updates;
@@ -62,4 +65,4 @@ Nog niet volledig uitgewerkt in versie 1:
 1. Deze integration gebruikt cloud MQTT, geen lokale LAN-API.
 2. De brokercredentials zijn gevoelig en horen niet in een publieke repo.
 3. Als de BBQ uit staat, blijft de integration wel bestaan maar komen er geen nieuwe push-updates binnen.
-4. `publish_raw_action` is krachtig maar ook risicovoller dan de bevestigde standaardactie.
+4. `publish_raw_action` is krachtig maar ook risicovoller dan de bevestigde standaardacties.

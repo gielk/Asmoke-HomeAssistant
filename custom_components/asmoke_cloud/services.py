@@ -10,10 +10,17 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_ENTRY_ID,
+    ATTR_INGREDIENT_CATEGORY,
+    ATTR_K_VALUE,
+    ATTR_MODE,
     ATTR_PAYLOAD,
+    ATTR_PROBE_TEMP,
     ATTR_TARGET_TEMP,
+    ATTR_TARGET_TIME,
     DOMAIN,
     SERVICE_PUBLISH_RAW_ACTION,
+    SERVICE_START_COOK,
+    SERVICE_STOP_COOK,
     SERVICE_SET_SMOKE_TARGET_TEMP,
 )
 from .coordinator import AsmokeDataUpdateCoordinator
@@ -37,6 +44,26 @@ SERVICE_SET_SMOKE_TARGET_TEMP_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_START_COOK_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTRY_ID): cv.string,
+        vol.Optional("device_id"): cv.string,
+        vol.Required(ATTR_MODE): cv.string,
+        vol.Required(ATTR_TARGET_TEMP): vol.Coerce(int),
+        vol.Optional(ATTR_PROBE_TEMP): vol.Coerce(int),
+        vol.Optional(ATTR_INGREDIENT_CATEGORY): cv.string,
+        vol.Optional(ATTR_K_VALUE): cv.string,
+        vol.Optional(ATTR_TARGET_TIME): vol.Coerce(int),
+    }
+)
+
+SERVICE_STOP_COOK_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTRY_ID): cv.string,
+        vol.Optional("device_id"): cv.string,
+    }
+)
+
 
 async def async_register_services(hass: HomeAssistant) -> None:
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -52,6 +79,38 @@ async def async_register_services(hass: HomeAssistant) -> None:
         coordinator = _resolve_coordinator(hass, call)
         await coordinator.runtime.async_publish_smoke_target_temp(call.data[ATTR_TARGET_TEMP])
 
+    async def handle_start_cook(call: ServiceCall) -> None:
+        coordinator = _resolve_coordinator(hass, call)
+        mode = _normalize_cook_mode(call.data[ATTR_MODE])
+        target_time = call.data.get(ATTR_TARGET_TIME)
+        probe_temp = call.data.get(ATTR_PROBE_TEMP)
+        ingredient_category = call.data.get(ATTR_INGREDIENT_CATEGORY)
+        k_value = call.data.get(ATTR_K_VALUE)
+
+        if mode == "quick" and target_time is None:
+            raise ServiceValidationError("target_time is required for quick mode")
+        if mode == "roast" and target_time is None:
+            raise ServiceValidationError("target_time is required for roast mode")
+        if mode == "roast" and probe_temp is None:
+            raise ServiceValidationError("probe_temp is required for roast mode")
+        if mode == "roast" and ingredient_category is None:
+            raise ServiceValidationError("ingredient_category is required for roast mode")
+        if mode == "roast" and k_value is None:
+            raise ServiceValidationError("k_value is required for roast mode")
+
+        await coordinator.runtime.async_publish_cook_start(
+            mode,
+            call.data[ATTR_TARGET_TEMP],
+            target_time,
+            probe_temp,
+            ingredient_category,
+            k_value,
+        )
+
+    async def handle_stop_cook(call: ServiceCall) -> None:
+        coordinator = _resolve_coordinator(hass, call)
+        await coordinator.runtime.async_publish_stop()
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_PUBLISH_RAW_ACTION,
@@ -63,6 +122,18 @@ async def async_register_services(hass: HomeAssistant) -> None:
         SERVICE_SET_SMOKE_TARGET_TEMP,
         handle_set_smoke_target_temp,
         schema=SERVICE_SET_SMOKE_TARGET_TEMP_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_COOK,
+        handle_start_cook,
+        schema=SERVICE_START_COOK_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_STOP_COOK,
+        handle_stop_cook,
+        schema=SERVICE_STOP_COOK_SCHEMA,
     )
 
     domain_data[_SERVICES_FLAG] = True
@@ -125,3 +196,11 @@ def _parse_payload(payload: Any) -> dict[str, Any]:
         return parsed
 
     raise ServiceValidationError("payload must be an object or JSON string")
+
+
+def _normalize_cook_mode(mode: Any) -> str:
+    normalized = str(mode).strip().lower()
+    if normalized in {"smoke", "quick", "roast"}:
+        return normalized
+
+    raise ServiceValidationError("mode must be 'smoke', 'quick' or 'roast'")
