@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.7 - 2026-04-20
+
+- Made the Quick target time number update the smoker live during an active Quick cook instead of only changing the next-start preset.
+- Aligned the Quick target time number with the reported device target time while Quick mode is running, so the editable control matches the live cooker state.
+
 ## v0.4.0-beta.6 - 2026-04-20
 
 - Added a `Cook active` binary sensor that follows the confirmed smoker `status` field and cleanly reports whether a cook is running or idle.

@@ -591,6 +591,9 @@ class AsmokeMqttRuntime:
     async def async_publish_smoke_target_temp(self, target_temp: int) -> None:
         await self.async_publish_cook_start("smoke", target_temp)
 
+    async def async_publish_quick_target_time(self, target_time: int) -> None:
+        await self.async_publish_action("Quick", {"targetTime": int(target_time)})
+
     async def async_publish_json(self, topic: str, payload: Mapping[str, Any]) -> None:
         if self._client is None:
             raise AsmokeConnectionError("MQTT client is not running")

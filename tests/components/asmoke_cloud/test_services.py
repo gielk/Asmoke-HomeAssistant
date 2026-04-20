@@ -209,6 +209,17 @@ async def test_runtime_start_quick_uses_vendor_payload_keys(hass, mock_entry) ->
     )
 
 
+async def test_runtime_quick_target_time_update_uses_vendor_payload(hass, mock_entry) -> None:
+    runtime = AsmokeMqttRuntime(hass, mock_entry.entry_id, mock_entry.data, mock_entry.options)
+    runtime.async_publish_action = AsyncMock()
+
+    await runtime.async_publish_quick_target_time(71)
+
+    runtime.async_publish_action.assert_awaited_once_with(
+        "Quick", {"targetTime": 71}
+    )
+
+
 async def test_runtime_start_roast_uses_confirmed_vendor_payload(hass, mock_entry) -> None:
     runtime = AsmokeMqttRuntime(hass, mock_entry.entry_id, mock_entry.data, mock_entry.options)
     runtime.async_publish_action = AsyncMock()
