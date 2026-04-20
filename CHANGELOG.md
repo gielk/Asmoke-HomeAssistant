@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.5 - 2026-04-20
+
+- Kept the climate entity `off` after Stop once the smoker reports `status: idle`, even if vendor telemetry keeps the previous cook mode value.
+- Added the normalized device `status` to runtime handling and climate state attributes so off-versus-running behavior is derived from the confirmed smoker state.
+
 ## v0.4.0-beta.4 - 2026-04-20
 
 - Fixed the initial `paho.mqtt.client` import to happen off the Home Assistant event loop, avoiding blocking-operation warnings during startup.

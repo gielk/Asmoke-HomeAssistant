@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.helpers import entity_registry as er
 
 from custom_components.asmoke_cloud.const import DOMAIN
@@ -171,6 +172,48 @@ async def test_climate_turn_off_service_publishes_stop(
     )
 
     coordinator.runtime.async_publish_stop.assert_awaited_once_with()
+
+
+async def test_climate_idle_status_keeps_hvac_off_with_sticky_mode(
+    hass,
+    mock_entry,
+    bypass_runtime_start,
+) -> None:
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][mock_entry.entry_id]
+    coordinator.runtime._apply_status_payload(
+        {
+            "status": "idle",
+            "mode": "QUICK",
+            "ignitionStatus": 0,
+            "targetTemp": 160,
+        }
+    )
+    coordinator.async_set_updated_data(
+        {
+            **coordinator.runtime.snapshot(),
+            "broker_connected": True,
+        }
+    )
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    climate_entity_id = entity_registry.async_get_entity_id(
+        "climate",
+        DOMAIN,
+        f"{coordinator.runtime.device_id}_pit_controller",
+    )
+    assert climate_entity_id is not None
+
+    state = hass.states.get(climate_entity_id)
+
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes["reported_mode"] == "QUICK"
+    assert state.attributes["reported_status"] == "idle"
 
 
 async def test_climate_target_temperature_step_matches_vendor_app(

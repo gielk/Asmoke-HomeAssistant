@@ -18,6 +18,8 @@ from .coordinator import AsmokeDataUpdateCoordinator
 from .entity import AsmokeCoordinatorEntity
 
 ACTIVE_MODE_VALUES = {"SMOKE", "QUICK", "ROAST", "RECIPE"}
+ACTIVE_STATUS_VALUES = {"RUNNING"}
+INACTIVE_STATUS_VALUES = {"IDLE", "OFF", "STOPPED"}
 
 
 async def async_setup_entry(
@@ -84,8 +86,13 @@ class AsmokePitClimate(RestoreEntity, AsmokeCoordinatorEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         data = self.coordinator.data or {}
+        reported_status = self._reported_status()
         reported_mode = self._reported_mode()
 
+        if reported_status in INACTIVE_STATUS_VALUES:
+            return HVACMode.OFF
+        if reported_status in ACTIVE_STATUS_VALUES:
+            return HVACMode.HEAT
         if reported_mode in ACTIVE_MODE_VALUES or data.get("ignition_status"):
             return HVACMode.HEAT
         return HVACMode.OFF
@@ -110,12 +117,13 @@ class AsmokePitClimate(RestoreEntity, AsmokeCoordinatorEntity, ClimateEntity):
         return {
             "quick_target_time": self.coordinator.cook_settings.target_time,
             "reported_mode": (self.coordinator.data or {}).get("mode"),
+            "reported_status": (self.coordinator.data or {}).get("status"),
         }
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if hvac_mode == HVACMode.OFF:
             await self.coordinator.runtime.async_publish_stop()
-            self._push_optimistic_state(mode=None, ignition_status=False)
+            self._push_optimistic_state(mode=None, status="idle", ignition_status=False)
             return
 
         if hvac_mode != HVACMode.HEAT:
@@ -182,3 +190,9 @@ class AsmokePitClimate(RestoreEntity, AsmokeCoordinatorEntity, ClimateEntity):
         if reported_mode is None:
             return ""
         return str(reported_mode).strip().upper()
+
+    def _reported_status(self) -> str:
+        reported_status = (self.coordinator.data or {}).get("status")
+        if reported_status is None:
+            return ""
+        return str(reported_status).strip().upper()

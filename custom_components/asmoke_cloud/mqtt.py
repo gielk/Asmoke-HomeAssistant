@@ -443,6 +443,7 @@ class AsmokeMqttRuntime:
             "probe_b_temp": None,
             "battery_level": None,
             "roast_progress": None,
+            "status": None,
             "target_temp": None,
             "target_time": None,
             "mode": None,
@@ -695,6 +696,7 @@ class AsmokeMqttRuntime:
             self._state["firmware_version"] = firmware_version
         self._state["battery_level"] = _normalize_int(payload.get("batteryLevel"))
         self._state["roast_progress"] = _normalize_int(payload.get("roastProgress"))
+        self._state["status"] = _normalize_string(payload.get("status"))
         self._state["target_temp"] = _normalize_int(
             payload.get("targetTemp", grill.get("targetTemp"))
         )
