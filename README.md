@@ -43,7 +43,7 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-tags voor HACS-releases. De huidige release is `v0.3.0`.
+Deze repository gebruikt vanaf nu semver-releases voor HACS. De huidige release is `v0.3.1`.
 
 Het overzicht van functionele releases staat in [CHANGELOG.md](CHANGELOG.md).
 

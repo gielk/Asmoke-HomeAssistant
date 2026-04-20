@@ -2,6 +2,11 @@
 
 Deze repository gebruikt semantic versioning voor functionele HACS-releases.
 
+## v0.3.1 - 2026-04-20
+
+- voegt echte GitHub Releases toe voor HACS-versies in plaats van alleen git-tags;
+- verbergt de default branch in HACS zodat gebruikers niet meer op commit-hashes uitkomen.
+
 ## v0.3.0 - 2026-04-20
 
 - toevoegt automatische `device_id` discovery via een tijdelijke MQTT discovery-stap;
