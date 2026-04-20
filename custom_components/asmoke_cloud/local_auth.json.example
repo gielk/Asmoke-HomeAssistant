@@ -4,6 +4,5 @@
   "username": "<mqtt_username>",
   "password": "<mqtt_password>",
   "keepalive": 60,
-  "device_id": "<asmoke_device_id>",
   "name": "Asmoke Smoker"
 }

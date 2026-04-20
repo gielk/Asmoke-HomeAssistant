@@ -49,6 +49,10 @@ class AsmokeAuthenticationError(AsmokeConnectionError):
     """Raised when broker authentication is rejected."""
 
 
+class AsmokeDiscoveryError(AsmokeConnectionError):
+    """Raised when no Asmoke device could be discovered."""
+
+
 def _mqtt_module() -> Any:
     try:
         return import_module("paho.mqtt.client")
@@ -82,6 +86,14 @@ def _normalize_bool(value: Any) -> bool | None:
     return None
 
 
+def _normalize_string(value: Any) -> str | None:
+    if value is None:
+        return None
+
+    normalized = str(value).strip()
+    return normalized or None
+
+
 def _normalize_int(value: Any) -> int | None:
     if value is None or value == "":
         return None
@@ -97,6 +109,67 @@ def _normalize_probe_temp(value: Any) -> int | None:
     if normalized == 499:
         return None
     return normalized
+
+
+def _decode_raw_payload(payload: bytes) -> Any:
+    text = payload.decode("utf-8", errors="replace")
+
+    try:
+        return json.loads(text)
+    except JSONDecodeError:
+        return text
+
+
+def _extract_discovery_device_id(topic: str, payload: Any) -> str | None:
+    if topic.startswith("device/status/"):
+        discovered = _normalize_string(topic.removeprefix("device/status/"))
+        if discovered is not None:
+            return discovered
+
+    if isinstance(payload, dict):
+        for key in ("deviceID", "deviceId", "device_id"):
+            discovered = _normalize_string(payload.get(key))
+            if discovered is not None:
+                return discovered
+
+    return None
+
+
+def _extract_grill_type(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+
+    grill = payload.get("grill")
+    if not isinstance(grill, dict):
+        return None
+
+    return _normalize_string(grill.get("type"))
+
+
+def _extract_firmware_version(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+
+    candidates = [payload]
+    for key in ("bbq", "grill", "device"):
+        nested = payload.get(key)
+        if isinstance(nested, dict):
+            candidates.append(nested)
+
+    for candidate in candidates:
+        for key in (
+            "firmwareVersion",
+            "firmware_version",
+            "fwVersion",
+            "fw_version",
+            "softwareVersion",
+            "swVersion",
+        ):
+            version = _normalize_string(candidate.get(key))
+            if version is not None:
+                return version
+
+    return None
 
 
 def _clean_extra_topics(value: Any) -> list[str]:
@@ -115,6 +188,13 @@ def _default_client_id(device_id: str, entry_id: str) -> str:
 
 async def async_validate_broker_connection(config: Mapping[str, Any]) -> None:
     await asyncio.to_thread(_validate_broker_connection, dict(config))
+
+
+async def async_discover_device(
+    config: Mapping[str, Any],
+    timeout: float = 15.0,
+) -> dict[str, Any]:
+    return await asyncio.to_thread(_discover_device, dict(config), timeout)
 
 
 def _validate_broker_connection(config: dict[str, Any]) -> None:
@@ -190,6 +270,115 @@ def _validate_broker_connection(config: dict[str, Any]) -> None:
         raise AsmokeConnectionError(f"Broker disconnected with rc={result['error']}")
 
 
+def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
+    mqtt = _mqtt_module()
+    username = str(config.get(CONF_USERNAME, "")).strip()
+    password = str(config.get(CONF_PASSWORD, "")).strip()
+    host = str(config.get(CONF_HOST, "")).strip()
+
+    if not host:
+        raise AsmokeConnectionError("Missing MQTT host")
+
+    if not username or not password:
+        raise AsmokeAuthenticationError("Missing MQTT credentials")
+
+    event = threading.Event()
+    result: dict[str, Any] = {
+        "rc": None,
+        "error": None,
+        "device_id": None,
+        "payload": None,
+    }
+
+    client = mqtt.Client(
+        client_id=f"ha_discover_{int(time.time())}",
+        protocol=mqtt.MQTTv311,
+    )
+    client.username_pw_set(username=username, password=password)
+
+    def on_connect(
+        connected_client: Any,
+        _userdata: Any,
+        _flags: dict[str, Any],
+        rc: int,
+        _properties: Any = None,
+    ) -> None:
+        result["rc"] = rc
+        if rc == 0:
+            connected_client.subscribe("device/status/+", qos=0)
+            return
+
+        event.set()
+
+    def on_disconnect(
+        _client: Any,
+        _userdata: Any,
+        rc: int,
+        _properties: Any = None,
+    ) -> None:
+        if result["device_id"] is None and rc != 0:
+            result["error"] = rc
+            event.set()
+
+    def on_message(
+        _client: Any,
+        _userdata: Any,
+        message: Any,
+    ) -> None:
+        payload = _decode_raw_payload(bytes(message.payload))
+        device_id = _extract_discovery_device_id(message.topic, payload)
+        if device_id is None:
+            return
+
+        result["device_id"] = device_id
+        result["payload"] = payload
+        event.set()
+
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_message = on_message
+
+    try:
+        client.connect(
+            host,
+            int(config.get(CONF_PORT, 1883)),
+            int(config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)),
+        )
+        client.loop_start()
+
+        if not event.wait(timeout):
+            raise AsmokeDiscoveryError(
+                "Timed out while waiting for an Asmoke device status message"
+            )
+    except OSError as err:
+        raise AsmokeConnectionError(str(err)) from err
+    finally:
+        try:
+            client.disconnect()
+        except OSError:
+            pass
+        client.loop_stop()
+
+    if result["rc"] in {4, 5}:
+        raise AsmokeAuthenticationError("Broker rejected username or password")
+
+    if result["rc"] not in {0, None}:
+        raise AsmokeConnectionError(f"Broker returned MQTT rc={result['rc']}")
+
+    if result["error"] is not None:
+        raise AsmokeConnectionError(f"Broker disconnected with rc={result['error']}")
+
+    if result["device_id"] is None:
+        raise AsmokeDiscoveryError("No Asmoke device was discovered")
+
+    payload = result["payload"]
+    return {
+        CONF_DEVICE_ID: result["device_id"],
+        "grill_type": _extract_grill_type(payload),
+        "firmware_version": _extract_firmware_version(payload),
+    }
+
+
 class AsmokeMqttRuntime:
     """Handle vendor MQTT connectivity and local device state."""
 
@@ -231,6 +420,8 @@ class AsmokeMqttRuntime:
             "messages_by_topic": {},
             "client_id": self.client_id,
             "subscribed_topics": self._subscription_topics(),
+            "grill_type": None,
+            "firmware_version": None,
             "grill_temp_1": None,
             "grill_temp_2": None,
             "probe_a_temp": None,
@@ -416,20 +607,21 @@ class AsmokeMqttRuntime:
         self._push_update()
 
     def _decode_payload(self, payload: bytes) -> Any:
-        text = payload.decode("utf-8", errors="replace")
-
-        try:
-            return json.loads(text)
-        except JSONDecodeError:
-            return text
+        return _decode_raw_payload(payload)
 
     def _apply_status_payload(self, payload: Any) -> None:
         if not isinstance(payload, dict):
             return
 
         grill = payload.get("grill") if isinstance(payload.get("grill"), dict) else {}
+        firmware_version = _extract_firmware_version(payload)
+        grill_type = _extract_grill_type(payload)
 
         self._state["status_payload"] = payload
+        if grill_type is not None:
+            self._state["grill_type"] = grill_type
+        if firmware_version is not None:
+            self._state["firmware_version"] = firmware_version
         self._state["battery_level"] = _normalize_int(payload.get("batteryLevel"))
         self._state["roast_progress"] = _normalize_int(payload.get("roastProgress"))
         self._state["target_temp"] = _normalize_int(

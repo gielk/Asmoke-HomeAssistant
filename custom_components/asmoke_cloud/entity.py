@@ -18,11 +18,13 @@ class AsmokeCoordinatorEntity(CoordinatorEntity[AsmokeDataUpdateCoordinator]):
 
     @property
     def device_info(self) -> DeviceInfo:
+        data = self.coordinator.data or {}
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.runtime.device_id)},
             manufacturer="Asmoke",
-            model="Cloud Smoker",
+            model=data.get("grill_type") or "Cloud Smoker",
             name=self.coordinator.runtime.name,
+            sw_version=data.get("firmware_version"),
         )
 
     @property

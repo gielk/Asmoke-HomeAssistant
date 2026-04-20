@@ -14,6 +14,7 @@ De integration:
 
 - maakt een config flow aan in Home Assistant;
 - verbindt rechtstreeks met de Asmoke MQTT-broker;
+- kan het `device_id` automatisch ontdekken via een tijdelijke MQTT discovery-stap;
 - leest temperatuur-, status- en result-berichten;
 - maakt entities aan in Home Assistant;
 - ondersteunt een eerste bevestigde write-actie voor smoke target temperature;
@@ -26,8 +27,11 @@ De integration:
 3. Herstart Home Assistant.
 4. Ga naar `Instellingen -> Apparaten en diensten -> Integratie toevoegen`.
 5. Kies `Asmoke Cloud`.
-6. Vul je `device_id`, broker host, poort, username, password en keepalive in.
-7. Rond de config flow af.
+6. Kies `Discover Asmoke device` of `Enter device ID manually`.
+7. Bij discovery: zet de BBQ aan of open de Asmoke app zodat Home Assistant tijdelijk een statusbericht kan opvangen.
+8. Rond de config flow af.
+
+Opmerking: host, poort en keepalive worden al met de bekende clouddefaults ingevuld. Deze repository commit geen vendor-shared MQTT credentials; als je die lokaal beschikbaar maakt via `local_auth.json` of environment variables, hoeven gebruikers in de praktijk meestal alleen nog een naam te kiezen en discovery te starten.
 
 ## Installatie en gebruik
 

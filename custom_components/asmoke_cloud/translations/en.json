@@ -4,6 +4,22 @@
     "step": {
       "user": {
         "title": "Connect to Asmoke Cloud",
+        "description": "Choose whether you want to discover the smoker automatically or enter the Asmoke device ID manually."
+      },
+      "discover": {
+        "title": "Discover Asmoke device",
+        "description": "The integration will temporarily listen for Asmoke status messages to learn the device ID. Turn on the smoker or open the Asmoke app before continuing. If local auth defaults are present, the broker fields are prefilled automatically. Local auth detected: {local_auth}",
+        "data": {
+          "name": "Display name",
+          "host": "MQTT host",
+          "port": "MQTT port",
+          "username": "MQTT username",
+          "password": "MQTT password",
+          "keepalive": "MQTT keepalive"
+        }
+      },
+      "manual": {
+        "title": "Enter device ID manually",
         "description": "Enter your Asmoke device ID and MQTT broker credentials. If local auth defaults are present, the fields are prefilled automatically. Local auth detected: {local_auth}",
         "data": {
           "device_id": "Asmoke device ID",
@@ -29,6 +45,7 @@
     },
     "error": {
       "cannot_connect": "Could not connect to the Asmoke MQTT broker",
+      "device_not_found": "No Asmoke status message was received during discovery",
       "invalid_auth": "Broker authentication failed"
     },
     "abort": {

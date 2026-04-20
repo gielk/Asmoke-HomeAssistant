@@ -6,14 +6,15 @@ Deze eerste versie werkt voor:
 
 1. installeren als custom integration;
 2. toevoegen via Home Assistant config flow;
-3. verbinding maken met de Asmoke cloud MQTT-broker;
-4. subscribe op bevestigde topics voor status, temperatures en result;
-5. entities aanmaken voor de belangrijkste telemetrie;
-6. diagnostics met redactie van gevoelige data;
-7. options flow voor debug logging, extra topics en offline timeout;
-8. een bevestigde write-actie voor smoke target temperature;
-9. een raw action service voor gevorderd gebruik;
-10. blijven laden als de BBQ uit staat.
+3. semi-automatische discovery van het `device_id` via tijdelijke MQTT-listening;
+4. verbinding maken met de Asmoke cloud MQTT-broker;
+5. subscribe op bevestigde topics voor status, temperatures en result;
+6. entities aanmaken voor de belangrijkste telemetrie;
+7. diagnostics met redactie van gevoelige data;
+8. options flow voor debug logging, extra topics en offline timeout;
+9. een bevestigde write-actie voor smoke target temperature;
+10. een raw action service voor gevorderd gebruik;
+11. blijven laden als de BBQ uit staat.
 
 ## Entities in versie 1
 
@@ -48,11 +49,11 @@ Bevestigd en ingebouwd:
 
 Nog niet volledig uitgewerkt in versie 1:
 
-1. automatische device discovery;
+1. volledig hands-off onboarding zonder brokercredentials;
 2. brede ondersteuning voor alle Asmoke-modi en commando's;
 3. volledige mapping van alle statusvelden;
-4. firmware-updates;
-5. geavanceerde onboarding zonder `device_id`;
+4. bevestigde firmwareversie-uitlezing;
+5. firmware-updates;
 6. UI-polish en uitgebreide eindgebruikersdiagnostiek;
 7. HACS default store opname.
 

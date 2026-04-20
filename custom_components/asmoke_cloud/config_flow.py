@@ -30,6 +30,8 @@ from .local_auth import has_local_auth_defaults, merge_connection_input
 from .mqtt import (
     AsmokeAuthenticationError,
     AsmokeConnectionError,
+    AsmokeDiscoveryError,
+    async_discover_device,
     async_validate_broker_connection,
 )
 
@@ -48,6 +50,43 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
         return AsmokeOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        return self.async_show_menu(step_id="user", menu_options=["discover", "manual"])
+
+    async def async_step_discover(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        errors: dict[str, str] = {}
+        defaults = merge_connection_input(user_input, self.hass)
+
+        if user_input is not None:
+            merged = merge_connection_input(user_input, self.hass)
+
+            try:
+                discovered = await async_discover_device(merged)
+            except AsmokeAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except AsmokeDiscoveryError:
+                errors["base"] = "device_not_found"
+            except AsmokeConnectionError:
+                errors["base"] = "cannot_connect"
+            else:
+                merged[CONF_DEVICE_ID] = str(discovered[CONF_DEVICE_ID])
+                await self.async_set_unique_id(str(merged[CONF_DEVICE_ID]))
+                self._abort_if_unique_id_configured()
+
+                title = str(merged.get(CONF_NAME) or f"Asmoke {merged[CONF_DEVICE_ID]}")
+                return self.async_create_entry(title=title, data=merged)
+
+        return self.async_show_form(
+            step_id="discover",
+            data_schema=self._discover_schema(defaults),
+            errors=errors,
+            description_placeholders={
+                "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
+            },
+        )
+
+    async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         errors: dict[str, str] = {}
         defaults = merge_connection_input(user_input, self.hass)
 
@@ -67,8 +106,8 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=merged)
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=self._user_schema(defaults),
+            step_id="manual",
+            data_schema=self._manual_schema(defaults),
             errors=errors,
             description_placeholders={
                 "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
@@ -117,7 +156,37 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _user_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _discover_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_NAME,
+                    default=_string_default(defaults.get(CONF_NAME)),
+                ): str,
+                vol.Required(
+                    CONF_HOST,
+                    default=_string_default(defaults.get(CONF_HOST), DEFAULT_BROKER_HOST),
+                ): str,
+                vol.Required(
+                    CONF_PORT,
+                    default=int(defaults.get(CONF_PORT, DEFAULT_BROKER_PORT)),
+                ): int,
+                vol.Required(
+                    CONF_USERNAME,
+                    default=_string_default(defaults.get(CONF_USERNAME)),
+                ): str,
+                vol.Required(
+                    CONF_PASSWORD,
+                    default=_string_default(defaults.get(CONF_PASSWORD)),
+                ): str,
+                vol.Required(
+                    CONF_KEEPALIVE,
+                    default=int(defaults.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)),
+                ): int,
+            }
+        )
+
+    def _manual_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
         return vol.Schema(
             {
                 vol.Required(

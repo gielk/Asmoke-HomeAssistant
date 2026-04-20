@@ -10,8 +10,7 @@ Je hebt nodig:
 
 - een werkende Home Assistant installatie;
 - HACS of handmatige custom component installatie;
-- de Asmoke `device_id`;
-- de brokergegevens die bij jouw Asmoke-opstelling horen;
+- de brokergegevens die bij jouw Asmoke-opstelling horen of lokaal zijn vooringevuld;
 - internettoegang vanaf Home Assistant naar de Asmoke broker.
 
 De BBQ hoeft niet aan te staan om de integration te installeren. Als de BBQ uit staat, zal de integration nog steeds laden, maar er komen dan geen live telemetrie-updates binnen.
@@ -35,15 +34,19 @@ De BBQ hoeft niet aan te staan om de integration te installeren. Als de BBQ uit 
 2. Ga naar `Instellingen -> Apparaten en diensten`.
 3. Klik op `Integratie toevoegen`.
 4. Kies `Asmoke Cloud`.
-5. Vul deze velden in:
-   `device_id`
-   optionele naam
-   MQTT host
-   MQTT port
-   MQTT username
-   MQTT password
-   MQTT keepalive
-6. Rond de config flow af.
+5. Kies een van deze routes:
+   `Discover Asmoke device`
+   `Enter device ID manually`
+6. Bij discovery:
+   vul optioneel een naam in;
+   controleer host, port, username, password en keepalive;
+   zet de BBQ aan of open de Asmoke app;
+   wacht tot Home Assistant een statusbericht ziet en het `device_id` automatisch leert.
+7. Bij handmatige invoer:
+   vul `device_id` in;
+   vul optioneel een naam in;
+   controleer host, port, username, password en keepalive.
+8. Rond de config flow af.
 
 ## Waar haal je deze gegevens vandaan?
 
@@ -65,7 +68,9 @@ Als je ze nog niet hebt, dan zijn er praktisch twee routes:
 1. gebruik de eerder lokaal vastgelegde waarden uit je reverse-engineeringnotities;
 2. of herhaal een packet capture / MITM-analyse om de app-verbinding opnieuw te bevestigen.
 
-De integration zelf ontdekt deze waarden in versie 1 nog niet automatisch.
+De integration kan nu wel automatisch het `device_id` proberen te ontdekken door tijdelijk naar `device/status/+` te luisteren. Dat werkt alleen als Home Assistant al met geldige brokercredentials kan inloggen.
+
+De repository levert bewust geen vendor-shared MQTT credentials als publieke standaard mee. Als je die gegevens privé al kent, kun je ze lokaal voorinvullen en hoeft discovery meestal alleen nog het `device_id` te leren.
 
 ## Optioneel: lokaal laten voorinvullen
 
@@ -74,6 +79,8 @@ Als je de brokergegevens niet steeds wilt invullen, kun je lokaal een bestand ge
 Gebruik als basis:
 
 - `custom_components/asmoke_cloud/local_auth.json.example`
+
+Het `device_id` is optioneel in dit bestand als je discovery wilt gebruiken.
 
 Ondersteunde locaties:
 
@@ -169,6 +176,15 @@ Controleer:
 - of de smoker recent berichten heeft gepubliceerd;
 - of `broker connected` wel aan staat.
 
+### Discovery vindt geen device
+
+Controleer:
+
+- of de brokercredentials kloppen;
+- of de BBQ aan staat of net via de app is gewekt;
+- of Home Assistant internettoegang heeft;
+- of er tijdens discovery echt een nieuw statusbericht van de smoker is verstuurd.
+
 ### Credentials zijn gewijzigd
 
 Open de integration opnieuw in Home Assistant en werk de brokergegevens bij via de integratie-instellingen of reauth-flow.
@@ -176,3 +192,7 @@ Open de integration opnieuw in Home Assistant en werk de brokergegevens bij via 
 ## Wat nu al werkt en wat nog niet
 
 Zie [docs/first-version.md](docs/first-version.md).
+
+## Firmwareversie
+
+In de tot nu toe bevestigde captures is nog geen duidelijk firmwareveld gezien. Als Asmoke later wel een herkenbaar firmwareveld in de statuspayload meestuurt, pakt de integratie dat automatisch op voor device info.
