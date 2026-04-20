@@ -30,6 +30,11 @@ custom_components/
     diagnostics.py
     local_auth.py
     local_auth.json.example
+    brand/
+      icon.png
+      icon@2x.png
+      logo.png
+      logo@2x.png
     translations/
       en.json
 tests/

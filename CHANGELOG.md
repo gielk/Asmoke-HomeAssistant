@@ -2,6 +2,11 @@
 
 Deze repository gebruikt semantic versioning voor functionele HACS-releases.
 
+## v0.3.3 - 2026-04-20
+
+- voegt lokale Home Assistant brand-assets toe voor `asmoke_cloud`;
+- levert `icon.png`, `icon@2x.png`, `logo.png` en `logo@2x.png` zodat de integratiekaart en UI-branding gevuld zijn.
+
 ## v0.3.2 - 2026-04-20
 
 - valideert en actualiseert de documentatie voor de huidige HACS- en onboardingflow;
