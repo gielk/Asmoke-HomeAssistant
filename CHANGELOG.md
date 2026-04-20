@@ -6,6 +6,10 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.2 - 2026-04-20
+
+- Fixed the initial config-flow menu so the `Discover Asmoke device` and `Enter device ID manually` options render with readable labels.
+
 ## v0.4.1 - 2026-04-20
 
 - Replaced the raw `Wi-Fi status` sensor with a normalized `Wi-Fi connected` binary sensor because current captures only confirm a boolean-like vendor connection flag.

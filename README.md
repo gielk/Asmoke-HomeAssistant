@@ -52,7 +52,7 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt semver-releases voor HACS. De laatste stabiele release is `v0.4.1`.
+Deze repository gebruikt semver-releases voor HACS. De laatste stabiele release is `v0.4.2`.
 
 De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
 

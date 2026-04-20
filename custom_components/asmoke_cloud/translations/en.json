@@ -4,7 +4,11 @@
     "step": {
       "user": {
         "title": "Connect to Asmoke Cloud",
-        "description": "Choose whether you want to discover the smoker automatically or enter the Asmoke device ID manually."
+        "description": "Choose whether you want to discover the smoker automatically or enter the Asmoke device ID manually.",
+        "menu_options": {
+          "discover": "Discover Asmoke device",
+          "manual": "Enter device ID manually"
+        }
       },
       "discover": {
         "title": "Discover Asmoke device",

@@ -1,11 +1,39 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 
 from custom_components.asmoke_cloud.const import DOMAIN
 from custom_components.asmoke_cloud.mqtt import AsmokeAuthenticationError, AsmokeDiscoveryError
+
+
+async def test_user_flow_shows_discover_and_manual_menu(hass, bypass_runtime_start) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] == "menu"
+    assert set(result["menu_options"]) == {"discover", "manual"}
+
+
+def test_user_flow_menu_option_translations_exist() -> None:
+    translation_path = (
+        Path(__file__).resolve().parents[3]
+        / "custom_components"
+        / "asmoke_cloud"
+        / "translations"
+        / "en.json"
+    )
+    translations = json.loads(translation_path.read_text())
+
+    assert translations["config"]["step"]["user"]["menu_options"] == {
+        "discover": "Discover Asmoke device",
+        "manual": "Enter device ID manually",
+    }
 
 
 async def test_manual_flow_creates_entry(hass, bypass_runtime_start) -> None:
