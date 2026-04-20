@@ -1,5 +1,9 @@
 # Asmoke Home Assistant
 
+<p align="center">
+	<img src="https://cdn.shopify.com/s/files/1/0288/2060/2954/files/logo_final_43448c3c-dfd2-4921-8526-ca91ac15a6f0.png?height=628&pad_color=ffffff&v=1646132983&width=1200" alt="Asmoke logo" width="320">
+</p>
+
 Home Assistant custom integration voor Asmoke smokers via de Asmoke cloud MQTT-broker.
 
 ## Wat dit is
