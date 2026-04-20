@@ -1,0 +1,132 @@
+views:
+  - title: Asmoke
+    path: asmoke
+    icon: mdi:grill-outline
+    cards:
+      - type: markdown
+        content: |
+          ## Asmoke Backyard
+          Gebruik de climate-kaart voor smoke of quick en pas `Quick target time` live aan tijdens een actieve Quick-cook.
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: thermostat
+            entity: climate.asmoke_backyard_pit_thermostat
+            name: Pit thermostat
+
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Quick controls
+                show_header_toggle: false
+                entities:
+                  - entity: number.asmoke_backyard_quick_target_time
+                    name: Quick target time
+                  - entity: sensor.asmoke_backyard_target_time
+                    name: Device target time
+                  - entity: sensor.asmoke_backyard_mode
+                    name: Reported mode
+
+              - type: horizontal-stack
+                cards:
+                  - type: button
+                    name: Start quick cook
+                    icon: mdi:rocket-launch-outline
+                    tap_action:
+                      action: call-service
+                      service: button.press
+                      target:
+                        entity_id: button.asmoke_backyard_start_quick_cook
+
+                  - type: button
+                    name: Stop cook
+                    icon: mdi:stop-circle-outline
+                    tap_action:
+                      action: call-service
+                      service: button.press
+                      target:
+                        entity_id: button.asmoke_backyard_stop_cook
+
+      - type: glance
+        title: Status
+        columns: 3
+        show_state: true
+        entities:
+          - entity: binary_sensor.asmoke_backyard_broker_connected
+            name: Broker
+          - entity: binary_sensor.asmoke_backyard_device_online
+            name: Device
+          - entity: binary_sensor.asmoke_backyard_cook_active
+            name: Cook
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: gauge
+            entity: sensor.asmoke_backyard_grill_temperature_1
+            name: Grill 1
+            min: 0
+            max: 300
+            severity:
+              green: 80
+              yellow: 140
+              red: 220
+
+          - type: gauge
+            entity: sensor.asmoke_backyard_grill_temperature_2
+            name: Grill 2
+            min: 0
+            max: 300
+            severity:
+              green: 80
+              yellow: 140
+              red: 220
+
+          - type: gauge
+            entity: sensor.asmoke_backyard_probe_a_temperature
+            name: Probe A
+            min: 0
+            max: 120
+            severity:
+              green: 45
+              yellow: 60
+              red: 75
+
+          - type: gauge
+            entity: sensor.asmoke_backyard_probe_b_temperature
+            name: Probe B
+            min: 0
+            max: 120
+            severity:
+              green: 45
+              yellow: 60
+              red: 75
+
+      - type: entities
+        title: Live telemetry
+        show_header_toggle: false
+        entities:
+          - entity: sensor.asmoke_backyard_grill_temperature_1
+          - entity: sensor.asmoke_backyard_grill_temperature_2
+          - entity: sensor.asmoke_backyard_probe_a_temperature
+          - entity: sensor.asmoke_backyard_probe_b_temperature
+          - entity: sensor.asmoke_backyard_battery_level
+          - entity: sensor.asmoke_backyard_roast_progress
+          - entity: sensor.asmoke_backyard_last_result_message
+
+      - type: history-graph
+        title: Temperature history
+        hours_to_show: 2
+        refresh_interval: 30
+        entities:
+          - entity: sensor.asmoke_backyard_grill_temperature_1
+            name: Grill 1
+          - entity: sensor.asmoke_backyard_grill_temperature_2
+            name: Grill 2
+          - entity: sensor.asmoke_backyard_probe_a_temperature
+            name: Probe A
+          - entity: sensor.asmoke_backyard_probe_b_temperature
+            name: Probe B

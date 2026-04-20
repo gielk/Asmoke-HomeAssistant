@@ -6,6 +6,13 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0 - 2026-04-20
+
+- Added confirmed cook controls for smoke, quick, roast, and stop, including a pit climate entity, start and stop buttons, and a dedicated Quick target time number.
+- Kept the climate entity and runtime state aligned with the confirmed smoker `status`, so `idle` is treated as off even when the vendor `mode` remains sticky.
+- Added a `Cook active` binary sensor and made Quick target time updates work live during an active Quick cook.
+- Expanded the documentation with a ready-to-copy Lovelace dashboard YAML view and updated automation examples for the current climate, `cook_active`, and live Quick target time behavior.
+
 ## v0.4.0-beta.7 - 2026-04-20
 
 - Made the Quick target time number update the smoker live during an active Quick cook instead of only changing the next-start preset.

@@ -28,6 +28,14 @@ De BBQ hoeft niet aan te staan om de integration te installeren. Als de BBQ uit 
 1. Kopieer de map `custom_components/asmoke_cloud` naar je Home Assistant configuratiemap onder `custom_components/asmoke_cloud`.
 2. Herstart Home Assistant.
 
+## Dashboard en YAML-voorbeelden
+
+Voor de huidige entityset zijn nu drie documentatie-ingangen beschikbaar:
+
+- [docs/dashboard-example.md](docs/dashboard-example.md) voor een complete Lovelace-view met dashboard-YAML;
+- [docs/dashboard-example.yaml](docs/dashboard-example.yaml) als direct kopieerbaar YAML-bestand;
+- [docs/automation-examples.md](docs/automation-examples.md) voor bijgewerkte automations en helper-gestuurde voorbeelden.
+
 ## Eerste configuratie
 
 1. Open Home Assistant.
@@ -101,12 +109,32 @@ Ondersteunde environment variables:
 
 Na installatie maakt de integration entities aan voor de gekozen smoker.
 
+Belangrijkste entities in de huidige beta:
+
+- `climate.asmoke_backyard_pit_thermostat` voor smoke en quick met een gedeelde target temperature;
+- `number.asmoke_backyard_quick_target_time` voor Quick target time;
+- `binary_sensor.asmoke_backyard_cook_active` als aanbevolen aan/uit-status voor de lopende cook;
+- `sensor.asmoke_backyard_target_time` voor de door de smoker gerapporteerde target time;
+- `button.asmoke_backyard_start_quick_cook` voor direct een Quick-cook starten;
+- `button.asmoke_backyard_stop_cook` voor direct een Stop sturen.
+
 Praktische eerste checks:
 
 1. Kijk of `broker connected` aan staat.
 2. Kijk of `device online` aan of uit staat.
-3. Zet de BBQ aan of open de Asmoke app zodat het device weer berichten publiceert.
-4. Controleer of temperatuur- en statusentities waarden krijgen.
+3. Kijk of `cook active` uit staat zolang er geen cook draait.
+4. Zet de BBQ aan of open de Asmoke app zodat het device weer berichten publiceert.
+5. Controleer of temperatuur-, target time- en statusentities waarden krijgen.
+
+## Hoe je de status moet interpreteren
+
+Voor dashboards en automations is dit het belangrijkste onderscheid:
+
+- gebruik `binary_sensor...cook_active` als de nette vraag is of er een cook loopt;
+- gebruik `sensor...mode` alleen als informatieve vendorstatus;
+- gebruik `binary_sensor...ignition_active` alleen als laag-niveau signaal, niet als hoofd-aan/uit-status.
+
+De reden daarvoor is dat Asmoke na een stop nog een oude `mode` zoals `QUICK` kan blijven rapporteren, terwijl de echte status al `idle` is. De integratie leidt `cook_active` daarom af uit de bevestigde runtime-status.
 
 ## Bediening in versie 1
 
@@ -115,21 +143,24 @@ Je kunt in deze eerste versie:
 - temperatuur- en statusdata uitlezen;
 - zien of de brokerverbinding actief is;
 - zien of het device recent berichten heeft gestuurd;
+- zien of er echt een cook actief is via `Cook active`;
 - een cook starten in bevestigde `smoke`-, `quick`- of `roast`-modus;
 - `smoke` en `quick` bedienen via een climate-entity met een gedeelde doeltemperatuur;
 - een lopende cook stoppen;
 - een `Stop cook` button direct vanaf het device-scherm gebruiken;
 - een `Start quick cook` button gebruiken met vooraf ingestelde Quick-waarden;
-- de Quick target time apart instellen voor Quick-modus;
+- de Quick target time apart instellen voor Quick-modus, zowel als preset in idle als live tijdens een actieve Quick-cook;
 - een raw action publiceren voor gecontroleerde experimenten.
 
 Praktisch betekent dat:
 
 - er nog maar één gedeelde target temperature is voor `smoke` en `quick`;
 - je de gewenste cook-modus kiest via de climate preset `smoke` of `quick`;
+- `cook_active` de aanbevolen automationstatus is voor aan of uit;
 - `Stop cook` direct als press button beschikbaar is;
 - `Start quick cook` direct als press button beschikbaar is;
 - alleen Quick `target_time` nog als aparte number-entity ingesteld wordt;
+- de Quick number tijdens een actieve Quick-cook live de smoker-target time volgt en direct kan bijsturen;
 - je voor bevestigde acties niet altijd ruwe JSON hoeft te sturen;
 - je voor onbevestigde functies nog steeds `publish_raw_action` kunt gebruiken.
 
@@ -192,7 +223,8 @@ Praktisch gebruik:
 - kies preset `quick` als je een quick-cook wilt starten;
 - stel de temperatuur in via de climate target temperature;
 - zet daarna de climate op `heat` om de gekozen modus te starten;
-- zet de climate op `off` of gebruik `climate.turn_off` om een stop-commando te sturen.
+- zet de climate op `off` of gebruik `climate.turn_off` om een stop-commando te sturen;
+- de climate blijft ook echt `off` zodra de smoker `status: idle` terugrapporteert, ook als de vendor `mode` nog een oude waarde vasthoudt.
 
 Voorbeeld YAML voor Smoke via climate:
 
@@ -220,9 +252,16 @@ action:
 Voor Quick zijn nu ook entities beschikbaar:
 
 - een number-entity voor `Quick target time`;
+- een sensor voor de door de smoker gerapporteerde `Target time`;
 - een press button `Start quick cook`.
 
 Je stelt eerst de climate target temperature en de Quick target time in en drukt daarna op de Quick-button. Die button publiceert vervolgens de bevestigde Quick-payload met die huidige waarden.
+
+Als er al een Quick-cook loopt, dan werkt `number.quick_target_time` niet alleen meer als lokale preset:
+
+- de number volgt dan de actuele device `target_time`;
+- een wijziging via `number.set_value` publiceert direct een live Quick-update naar de smoker;
+- de losse `sensor.target_time` blijft de ruwe device-telemetrie tonen.
 
 Voorbeeld YAML om de Quick-button te gebruiken:
 
@@ -241,6 +280,17 @@ action:
   - service: button.press
     target:
       entity_id: button.asmoke_backyard_start_quick_cook
+```
+
+Voorbeeld YAML om een actieve Quick-cook live te verlengen:
+
+```yaml
+action:
+  - service: number.set_value
+    target:
+      entity_id: number.asmoke_backyard_quick_target_time
+    data:
+      value: 90
 ```
 
 ### Stop button entity

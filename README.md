@@ -20,8 +20,9 @@ De integration:
 - leest temperatuur-, status- en result-berichten;
 - maakt entities aan in Home Assistant;
 - ondersteunt bevestigde write-acties voor smoke, quick, roast en stop-cook bediening;
-- maakt een climate-entity aan met een gedeelde target temperature en `smoke`/`quick` modekeuze, plus een aparte Quick target time number-entity;
+- maakt een climate-entity aan met een gedeelde target temperature en `smoke`/`quick` modekeuze, plus een Quick target time number-entity die tijdens een actieve Quick-cook live mee kan sturen;
 - houdt daarnaast een `Stop cook` button-entity en een `Start quick cook` button-entity beschikbaar;
+- exposeert een `Cook active` binary sensor als nette aan/uit-status voor dashboards en automations;
 - blijft laden als de BBQ uit staat.
 
 ## Snelle start
@@ -41,7 +42,9 @@ Opmerking: host, poort en keepalive worden al met de bekende clouddefaults ingev
 
 De volledige handleiding staat in [docs/user-guide.md](docs/user-guide.md).
 
-Voor automation- en notificatievoorbeelden met YAML zie [docs/automation-examples.md](docs/automation-examples.md).
+Voor een kopieerbaar Lovelace-dashboard in YAML zie [docs/dashboard-example.md](docs/dashboard-example.md).
+
+Voor automation-, script- en notificatievoorbeelden met YAML zie [docs/automation-examples.md](docs/automation-examples.md).
 
 ## Wat werkt in versie 1
 
@@ -49,7 +52,7 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.4`.
+Deze repository gebruikt semver-releases voor HACS. De laatste stabiele release is `v0.4.0`.
 
 De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
 

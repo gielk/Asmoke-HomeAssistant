@@ -18,7 +18,8 @@ Deze eerste versie werkt voor:
 12. blijven laden als de BBQ uit staat;
 13. een climate-entity met een gedeelde target temperature en `smoke`/`quick` modekeuze;
 14. een `Stop cook` button-entity en een `Start quick cook` button-entity;
-15. lokale Quick-invoer via een number-entity voor target time.
+15. een `Cook active` binary sensor voor de nette vraag of er echt een cook loopt;
+16. Quick target time via een number-entity die idle als preset werkt en tijdens een actieve Quick-cook live kan bijsturen.
 
 ## Entities in versie 1
 
@@ -34,6 +35,7 @@ Beschikbare entitytypes:
 - sensor voor last result message;
 - binary sensor voor broker connected;
 - binary sensor voor device online;
+- binary sensor voor cook active;
 - binary sensor voor ignition active;
 - climate entity voor pit thermostat;
 - number entity voor quick target time;
@@ -47,6 +49,7 @@ Bevestigd en ingebouwd:
 - smoke en quick via een gedeelde climate target temperature;
 - smoke en quick modekeuze via climate preset modes;
 - quick target time via een aparte number-entity;
+- live Quick target time updates via diezelfde number-entity tijdens een actieve Quick-cook;
 - smoke target temperature via `asmoke_cloud.set_smoke_target_temp`.
 - cook start via `asmoke_cloud.start_cook` met bevestigde `smoke`, `quick` en `roast` modi;
 - cook stop via `asmoke_cloud.stop_cook`.
@@ -59,6 +62,8 @@ Bevestigd en ingebouwd:
 
 - `probeATemp = 499` wordt behandeld als probe niet aangesloten;
 - `probeBTemp = 499` wordt behandeld als probe niet aangesloten.
+- `status: idle` is de autoritatieve off-state, ook als `mode` nog een oudere waarde zoals `QUICK` bevat;
+- `binary_sensor.cook_active` is daarom het aanbevolen automation- en dashboardsignaal voor aan of uit.
 
 ## Wat nog beperkt is
 
