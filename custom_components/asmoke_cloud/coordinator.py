@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -8,10 +9,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_QUICK_TARGET_TIME,
+    DEFAULT_TARGET_TEMPERATURE,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from .mqtt import AsmokeMqttRuntime
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class AsmokeQuickSettings:
+    """Mutable quick-start settings shared by entities."""
+
+    target_temp: int = DEFAULT_TARGET_TEMPERATURE
+    target_time: int = DEFAULT_QUICK_TARGET_TIME
 
 
 class AsmokeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -26,6 +40,7 @@ class AsmokeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.entry = entry
         self.runtime = AsmokeMqttRuntime(hass, entry.entry_id, entry.data, entry.options)
+        self.quick_settings = AsmokeQuickSettings()
         self.runtime.set_update_callback(self.async_set_updated_data)
 
     async def async_start(self) -> None:

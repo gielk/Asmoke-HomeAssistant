@@ -6,6 +6,12 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.2 - 2026-04-20
+
+- Added a `Stop cook` press button entity.
+- Added a `Start quick cook` button plus local Quick target temperature and target time number entities.
+- Expanded the documentation with concrete service reference examples and Home Assistant automation YAML snippets.
+
 ## v0.4.0-beta.1 - 2026-04-20
 
 - Added confirmed `start_cook` and `stop_cook` services for the newly verified Asmoke control routes.

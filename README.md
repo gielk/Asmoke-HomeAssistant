@@ -20,6 +20,7 @@ De integration:
 - leest temperatuur-, status- en result-berichten;
 - maakt entities aan in Home Assistant;
 - ondersteunt bevestigde write-acties voor smoke, quick, roast en stop-cook bediening;
+- maakt een `Stop cook` button-entity en een `Start quick cook` button-entity aan, plus instelbare Quick-waarden via number-entities;
 - blijft laden als de BBQ uit staat.
 
 ## Snelle start
@@ -39,13 +40,15 @@ Opmerking: host, poort en keepalive worden al met de bekende clouddefaults ingev
 
 De volledige handleiding staat in [docs/user-guide.md](docs/user-guide.md).
 
+Voor automation- en notificatievoorbeelden met YAML zie [docs/automation-examples.md](docs/automation-examples.md).
+
 ## Wat werkt in versie 1
 
 Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.1`.
+Deze repository gebruikt vanaf nu semver-releases voor HACS. De laatste stabiele release is `v0.3.3` en de huidige beta-release is `v0.4.0-beta.2`.
 
 De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
 

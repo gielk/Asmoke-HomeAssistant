@@ -117,8 +117,18 @@ Je kunt in deze eerste versie:
 - zien of het device recent berichten heeft gestuurd;
 - een cook starten in bevestigde `smoke`-, `quick`- of `roast`-modus;
 - een lopende cook stoppen;
+- een `Stop cook` button direct vanaf het device-scherm gebruiken;
+- een `Start quick cook` button gebruiken met vooraf ingestelde Quick-waarden;
 - de smoke target temperature aanpassen;
 - een raw action publiceren voor gecontroleerde experimenten.
+
+Praktisch betekent dat:
+
+- `Stop cook` direct als press button beschikbaar is;
+- `Start quick cook` direct als press button beschikbaar is;
+- Quick `target_temp` en `target_time` via number-entities ingesteld kunnen worden vóór je de Quick-button indrukt;
+- je voor bevestigde acties niet altijd ruwe JSON hoeft te sturen;
+- je voor onbevestigde functies nog steeds `publish_raw_action` kunt gebruiken.
 
 ## Probe niet aangesloten
 
@@ -133,6 +143,11 @@ Praktisch betekent dat:
 
 ## Services
 
+De voorbeelden hieronder gaan uit van een automation of script in YAML.
+
+Als je maar een smoker in Home Assistant hebt, hoef je meestal geen `entry_id` of `device_id` mee te geven.
+Heb je meerdere Asmoke-smokers gekoppeld, voeg dan een van die twee velden toe zodat de action naar het juiste device gaat.
+
 Beschikbare services:
 
 1. `asmoke_cloud.set_smoke_target_temp`
@@ -144,6 +159,61 @@ Beschikbare services:
 
 Gebruik deze service of de number-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
 
+Benodigd:
+
+- `target_temp`
+
+Voorbeeld YAML:
+
+```yaml
+action:
+  - service: asmoke_cloud.set_smoke_target_temp
+    data:
+      target_temp: 110
+```
+
+### Quick button entities
+
+Voor Quick zijn nu ook entities beschikbaar:
+
+- een number-entity voor `Quick target temperature`;
+- een number-entity voor `Quick target time`;
+- een press button `Start quick cook`.
+
+Je stelt eerst de twee Quick number-waarden in en drukt daarna op de Quick-button. Die button publiceert vervolgens de bevestigde Quick-payload met de huidige entitywaarden.
+
+Voorbeeld YAML om de Quick-button te gebruiken:
+
+```yaml
+action:
+  - service: number.set_value
+    target:
+      entity_id: number.asmoke_backyard_quick_target_temperature
+    data:
+      value: 160
+  - service: number.set_value
+    target:
+      entity_id: number.asmoke_backyard_quick_target_time
+    data:
+      value: 12
+  - service: button.press
+    target:
+      entity_id: button.asmoke_backyard_start_quick_cook
+```
+
+### Stop button entity
+
+Naast de service is er nu ook een press button `Stop cook`. Die publiceert dezelfde bevestigde Stop-actie, maar is handiger voor direct gebruik vanaf het device-scherm of een dashboard.
+
+Voorbeeld YAML om de Stop-button te gebruiken:
+
+```yaml
+action:
+  - service: button.press
+    target:
+      entity_id: button.asmoke_backyard_stop_cook
+```
+
 ### start_cook
 
 Gebruik deze service om een bevestigde cook-modus te starten.
@@ -151,7 +221,7 @@ Gebruik deze service om een bevestigde cook-modus te starten.
 Bevestigde waarden voor `mode`:
 
 - `smoke`: vereist `target_temp`;
-- `quick`: vereist `target_temp` en `target_time`.
+- `quick`: vereist `target_temp` en `target_time`;
 - `roast`: vereist `target_temp`, `target_time`, `probe_temp`, `ingredient_category` en `k_value`.
 
 De integratie vertaalt dit naar de bevestigde vendorpayloads:
@@ -162,13 +232,104 @@ De integratie vertaalt dit naar de bevestigde vendorpayloads:
 
 De huidige Roast-ondersteuning blijft bewust strikt: de integratie exposeert alleen de exact bevestigde velden uit de capture en vult geen onbevestigde defaults in.
 
+Voorbeeld YAML voor `smoke`:
+
+```yaml
+action:
+  - service: asmoke_cloud.start_cook
+    data:
+      mode: smoke
+      target_temp: 110
+```
+
+Voorbeeld YAML voor `quick`:
+
+```yaml
+action:
+  - service: asmoke_cloud.start_cook
+    data:
+      mode: quick
+      target_temp: 160
+      target_time: 12
+```
+
+Voorbeeld YAML voor `roast`:
+
+```yaml
+action:
+  - service: asmoke_cloud.start_cook
+    data:
+      mode: roast
+      target_temp: 200
+      target_time: 50
+      probe_temp: 65
+      ingredient_category: Beef
+      k_value: "0.014"
+```
+
 ### stop_cook
 
 Gebruik deze service om een lopende cook te stoppen. De integratie publiceert hiervoor de bevestigde vendoractie `{"type":"action","command":"Stop"}`.
 
+Benodigd:
+
+- geen extra velden als je maar één smoker hebt;
+- anders `entry_id` of `device_id`.
+
+Voorbeeld YAML:
+
+```yaml
+action:
+  - service: asmoke_cloud.stop_cook
+```
+
 ### publish_raw_action
 
 Gebruik deze alleen als je weet welke payload je wilt sturen. Deze service verwacht ruwe vendor-JSON, bijvoorbeeld `{"targetTemp":110}` voor het bevestigde Smoke-commando. Deze service is bedoeld als gevorderde fallback en voor reverse-engineering van extra Asmoke-functies.
+
+In YAML kun je `payload` als object meegeven. In de Home Assistant service-UI is een JSON-string vaak het meest praktisch.
+
+Benodigd:
+
+- `command`
+- optioneel `payload`
+
+Voorbeeld YAML:
+
+```yaml
+action:
+  - service: asmoke_cloud.publish_raw_action
+    data:
+      command: Smoke
+      payload:
+        targetTemp: 110
+```
+
+Voorbeeld als JSON-string:
+
+```yaml
+action:
+  - service: asmoke_cloud.publish_raw_action
+    data:
+      command: Smoke
+      payload: '{"targetTemp":110}'
+```
+
+## Entities voor bediening
+
+Naast services maakt de integratie ook directe bedienings-entities aan:
+
+- `number.<naam>_smoke_target_temperature`
+- `number.<naam>_quick_target_temperature`
+- `number.<naam>_quick_target_time`
+- `button.<naam>_start_quick_cook`
+- `button.<naam>_stop_cook`
+
+De exacte entity IDs hangen af van je device name in Home Assistant. Controleer ze altijd even in Ontwikkelaarstools of op het device-scherm.
+
+## Automation-voorbeelden
+
+Voor complete voorbeelden met notificaties en YAML zie [automation-examples.md](automation-examples.md).
 
 ## Wat je ziet als de BBQ uit staat
 

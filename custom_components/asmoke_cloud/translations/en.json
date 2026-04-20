@@ -105,9 +105,69 @@
           "description": "Target grill temperature to publish with the Smoke command."
         }
       }
+    },
+    "start_cook": {
+      "name": "Start cook",
+      "description": "Start a confirmed Asmoke cook mode.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional config entry ID if multiple Asmoke integrations are loaded."
+        },
+        "device_id": {
+          "name": "Asmoke device ID",
+          "description": "Optional Asmoke device ID if multiple entries are loaded."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "Confirmed mode to start, for example smoke, quick, or roast."
+        },
+        "target_temp": {
+          "name": "Target temperature",
+          "description": "Target grill temperature to publish with the selected cook command."
+        },
+        "target_time": {
+          "name": "Target time",
+          "description": "Target cook time in minutes for confirmed modes that require a duration."
+        },
+        "probe_temp": {
+          "name": "Probe temperature",
+          "description": "Target probe temperature for the confirmed Roast command."
+        },
+        "ingredient_category": {
+          "name": "Ingredient category",
+          "description": "Confirmed ingredient category value for the Roast command, for example Beef."
+        },
+        "k_value": {
+          "name": "K value",
+          "description": "Confirmed kValue string for the Roast command."
+        }
+      }
+    },
+    "stop_cook": {
+      "name": "Stop cook",
+      "description": "Publish the confirmed Asmoke stop command.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional config entry ID if multiple Asmoke integrations are loaded."
+        },
+        "device_id": {
+          "name": "Asmoke device ID",
+          "description": "Optional Asmoke device ID if multiple entries are loaded."
+        }
+      }
     }
   },
   "entity": {
+    "button": {
+      "start_quick_cook": {
+        "name": "Start quick cook"
+      },
+      "stop_cook": {
+        "name": "Stop cook"
+      }
+    },
     "sensor": {
       "grill_temperature_1": {
         "name": "Grill temperature 1"
@@ -154,6 +214,12 @@
     "number": {
       "smoke_target_temperature": {
         "name": "Smoke target temperature"
+      },
+      "quick_target_temperature": {
+        "name": "Quick target temperature"
+      },
+      "quick_target_time": {
+        "name": "Quick target time"
       }
     }
   }
