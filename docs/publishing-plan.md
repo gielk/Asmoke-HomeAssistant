@@ -31,10 +31,11 @@ Gebruik voor iedere nieuwe release deze volgorde:
 1. Werk code en documentatie bij.
 2. Draai `pytest tests/components/asmoke_cloud -q`.
 3. Werk `custom_components/asmoke_cloud/manifest.json` bij naar de nieuwe semver-versie.
-4. Voeg een nieuwe entry toe aan `CHANGELOG.md`.
-5. Commit de releasevoorbereiding.
-6. Maak en push een git-tag met dezelfde versie, bijvoorbeeld `v0.3.2`.
-7. Maak daarna een GitHub Release voor die tag.
+4. Voeg een nieuwe Engelstalige entry toe aan `CHANGELOG.md`.
+5. Schrijf changelogregels vanuit gebruikersimpact, niet vanuit interne commitdetails.
+6. Commit de releasevoorbereiding.
+7. Maak en push een git-tag met dezelfde versie, bijvoorbeeld `v0.3.3`.
+8. Maak daarna een GitHub Release voor die tag.
 
 ## Huidige validatie
 

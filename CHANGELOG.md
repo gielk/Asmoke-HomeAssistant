@@ -1,37 +1,39 @@
 # Changelog
 
-Deze repository gebruikt semantic versioning voor functionele HACS-releases.
+This repository uses semantic versioning for functional HACS releases.
+
+Changelog entries should stay user-facing, concise, and written in English.
 
 ## v0.3.3 - 2026-04-20
 
-- voegt lokale Home Assistant brand-assets toe voor `asmoke_cloud`;
-- levert `icon.png`, `icon@2x.png`, `logo.png` en `logo@2x.png` zodat de integratiekaart en UI-branding gevuld zijn.
+- Added local Home Assistant brand assets for `asmoke_cloud`.
+- Added `icon.png`, `icon@2x.png`, `logo.png`, and `logo@2x.png` so the integration card and UI branding no longer fall back to placeholders.
 
 ## v0.3.2 - 2026-04-20
 
-- valideert en actualiseert de documentatie voor de huidige HACS- en onboardingflow;
-- zet het Smoke temperature-commando weer op het bevestigde vendorveld `targetTemp`.
+- Refreshed the documentation to match the current HACS and onboarding flow.
+- Fixed the Smoke target temperature command to publish the confirmed vendor key `targetTemp`.
 
 ## v0.3.1 - 2026-04-20
 
-- voegt echte GitHub Releases toe voor HACS-versies in plaats van alleen git-tags;
-- verbergt de default branch in HACS zodat gebruikers niet meer op commit-hashes uitkomen.
+- Added real GitHub Releases for HACS instead of relying on git tags alone.
+- Hid the default branch in HACS so users install named versions instead of commit hashes.
 
 ## v0.3.0 - 2026-04-20
 
-- toevoegt automatische `device_id` discovery via een tijdelijke MQTT discovery-stap;
-- splitst de config flow op in discover en manual onboarding;
-- vult device metadata zoals grill type en een eventuele firmwareversie aan wanneer die in payloads aanwezig zijn.
+- Added automatic `device_id` discovery through a temporary MQTT discovery step.
+- Split the config flow into discover and manual onboarding paths.
+- Added support for device metadata such as grill type and firmware version when present in payloads.
 
 ## v0.2.0 - 2026-04-20
 
-- behandelt probe temperatuurwaarde `499` als niet aangesloten in plaats van als echte temperatuur.
+- Treated probe temperature value `499` as disconnected instead of exposing it as a real temperature.
 
 ## v0.1.1 - 2026-04-20
 
-- lost de Home Assistant config flow laadfout op zodat de integratie betrouwbaar opent in de UI.
+- Fixed the Home Assistant config flow loading issue so the integration opens reliably in the UI.
 
 ## v0.1.0 - 2026-04-18
 
-- eerste publieke werkende versie van de Asmoke Home Assistant integratie;
-- cloud MQTT runtime, config flow, entities, services en basisdocumentatie.
+- First public working release of the Asmoke Home Assistant integration.
+- Included the cloud MQTT runtime, config flow, entities, services, and base documentation.
