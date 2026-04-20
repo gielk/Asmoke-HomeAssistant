@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
-    ATTR_TARGET_TEMP,
     CONF_DEBUG_LOGGING,
     CONF_EXTRA_TOPICS,
     CONF_KEEPALIVE,
@@ -501,7 +500,7 @@ class AsmokeMqttRuntime:
     async def async_publish_smoke_target_temp(self, target_temp: int) -> None:
         await self.async_publish_action(
             "Smoke",
-            {ATTR_TARGET_TEMP: int(target_temp)},
+            {"targetTemp": int(target_temp)},
         )
 
     async def async_publish_json(self, topic: str, payload: Mapping[str, Any]) -> None:

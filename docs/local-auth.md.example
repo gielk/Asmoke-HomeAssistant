@@ -34,6 +34,8 @@ Kopieer dit bestand lokaal naar `docs/local-auth.md`. Dat bestand staat in `.git
 
 ## Bevestigde payloadvoorbeelden
 
+De command payload hieronder is het direct op de broker waargenomen vendorformaat. De Home Assistant service `set_smoke_target_temp` gebruikt in de UI het veld `target_temp`, maar publiceert intern dit vendorformaat.
+
 ### Command payload
 
 ```json

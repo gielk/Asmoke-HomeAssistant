@@ -8,7 +8,7 @@ Met deze integration verbind je Home Assistant rechtstreeks met de Asmoke cloudb
 
 Je hebt nodig:
 
-- een werkende Home Assistant installatie;
+- Home Assistant `2025.1.0` of nieuwer;
 - HACS of handmatige custom component installatie;
 - de brokergegevens die bij jouw Asmoke-opstelling horen of lokaal zijn vooringevuld;
 - internettoegang vanaf Home Assistant naar de Asmoke broker.
@@ -138,11 +138,11 @@ Beschikbare services:
 
 ### set_smoke_target_temp
 
-Gebruik deze service of de number-entity om de bevestigde smoke target temperature payload te sturen.
+Gebruik deze service of de number-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
 
 ### publish_raw_action
 
-Gebruik deze alleen als je weet welke payload je wilt sturen. Deze service is bedoeld als gevorderde fallback en voor reverse-engineering van extra Asmoke-functies.
+Gebruik deze alleen als je weet welke payload je wilt sturen. Deze service verwacht ruwe vendor-JSON, bijvoorbeeld `{"targetTemp":110}` voor het bevestigde Smoke-commando. Deze service is bedoeld als gevorderde fallback en voor reverse-engineering van extra Asmoke-functies.
 
 ## Wat je ziet als de BBQ uit staat
 
@@ -187,11 +187,11 @@ Controleer:
 
 ### Credentials zijn gewijzigd
 
-Open de integration opnieuw in Home Assistant en werk de brokergegevens bij via de integratie-instellingen of reauth-flow.
+De options flow in deze versie beheert alleen `offline_timeout`, `extra_topics` en `debug_logging`. Als brokercredentials zijn gewijzigd, voeg de integratie opnieuw toe met de nieuwe waarden. Gebruik de reauth-flow alleen als Home Assistant die expliciet aanbiedt.
 
 ## Wat nu al werkt en wat nog niet
 
-Zie [docs/first-version.md](docs/first-version.md).
+Zie [first-version.md](first-version.md).
 
 ## Firmwareversie
 

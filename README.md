@@ -6,6 +6,8 @@
 
 Home Assistant custom integration voor Asmoke smokers via de Asmoke cloud MQTT-broker.
 
+Minimaal ondersteunde Home Assistant versie: `2025.1.0`.
+
 ## Wat dit is
 
 Deze repository bevat een werkende eerste versie van een custom Home Assistant integration.
@@ -43,7 +45,7 @@ Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
 ## Releases
 
-Deze repository gebruikt vanaf nu semver-releases voor HACS. De huidige release is `v0.3.1`.
+Deze repository gebruikt vanaf nu semver-releases voor HACS. De huidige release is `v0.3.2`.
 
 Het overzicht van functionele releases staat in [CHANGELOG.md](CHANGELOG.md).
 

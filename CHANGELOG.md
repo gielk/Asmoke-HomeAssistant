@@ -2,6 +2,11 @@
 
 Deze repository gebruikt semantic versioning voor functionele HACS-releases.
 
+## v0.3.2 - 2026-04-20
+
+- valideert en actualiseert de documentatie voor de huidige HACS- en onboardingflow;
+- zet het Smoke temperature-commando weer op het bevestigde vendorveld `targetTemp`.
+
 ## v0.3.1 - 2026-04-20
 
 - voegt echte GitHub Releases toe voor HACS-versies in plaats van alleen git-tags;

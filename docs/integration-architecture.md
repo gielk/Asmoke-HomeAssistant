@@ -2,28 +2,15 @@
 
 ## Korte conclusie
 
-Voor Asmoke is de juiste route een Home Assistant custom integration met een eigen verbinding naar de vendor MQTT-broker. Een HACS frontend plugin of een losse add-on is daarvoor niet de primaire vorm.
+Asmoke draait in deze repo als Home Assistant custom integration met een eigen verbinding naar de vendor MQTT-broker. Een add-on is niet nodig voor de normale runtime.
 
-## Juiste distributievorm
+## Huidige distributievorm
 
-- Home Assistant vorm: custom integration
-- HACS repo type: `integration`
-- Niet geschikt als HACS `plugin`
-- Alleen eventueel later een add-on als optionele onboarding-helper
+- Home Assistant vorm: custom integration;
+- HACS type: `integration`;
+- domein: `asmoke_cloud`.
 
-## Aanbevolen domein
-
-Aanbevolen integratiedomein: `asmoke_cloud`.
-
-Reden:
-
-- de huidige route is expliciet cloud-gebaseerd;
-- het voorkomt verwarring als er later ooit een echte lokale Asmoke-API opduikt;
-- het maakt de runtimeverantwoordelijkheid meteen duidelijk.
-
-Als je zeker weet dat er nooit een aparte lokale variant komt, is `asmoke` ook verdedigbaar.
-
-## Aanbevolen repository- en integratiestructuur
+## Actuele repositorystructuur
 
 ```text
 custom_components/
@@ -34,141 +21,88 @@ custom_components/
     config_flow.py
     coordinator.py
     mqtt.py
-    services.py
-    services.yaml
-    diagnostics.py
+    entity.py
     sensor.py
     binary_sensor.py
     number.py
-    select.py
+    services.py
+    services.yaml
+    diagnostics.py
+    local_auth.py
+    local_auth.json.example
     translations/
       en.json
-    brand/
-      icon.png
-      logo.png
 tests/
   components/
     asmoke_cloud/
+      conftest.py
       test_config_flow.py
+      test_diagnostics.py
       test_init.py
       test_sensor.py
       test_services.py
-      test_diagnostics.py
 ```
 
 ## Config flow
 
-De minimale config flow moet vragen om:
+De config flow biedt nu twee routes:
 
-- `device_id`
-- optioneel een gebruikersnaam of friendly name voor het device
+1. `discover`
+2. `manual`
 
-De integration vult zelf in:
+Bij `discover` logt Home Assistant tijdelijk in op de broker en luistert kort op `device/status/+` om een `device_id` te vinden. Bij `manual` vult de gebruiker het `device_id` zelf in.
 
-- broker host;
-- broker port;
-- standaard keepalive;
-- standaard topicpatronen;
-- app-auth uit lokale secrets of een lokale auth-notitie.
+Beide routes vragen in de huidige versie broker host, port, username, password en keepalive, tenzij die al lokaal zijn vooringevuld via local auth of environment variables.
 
-Aanbevolen gedrag:
+## Reauth en options
 
-- `unique_id` gelijk aan de `device_id`;
-- mislukte auth moet naar reauth kunnen leiden;
-- een connectietest moet plaatsvinden voordat de entry wordt aangemaakt;
-- een optiescherm moet later reconnect- en debugopties kunnen beheren.
+De integratie heeft een reauth-flow voor brokercredentials en een `OptionsFlowWithReload` voor:
 
-## Options flow
+- `offline_timeout`;
+- `extra_topics`;
+- `debug_logging`.
 
-Gebruik bij voorkeur een `OptionsFlowWithReload` zodat gewijzigde opties automatisch leiden tot herladen van de integration.
-
-Geschikte opties:
-
-- debug logging aan of uit;
-- aanvullende topic-subscriptions voor onderzoek;
-- reconnect-interval of backoff-profiel;
-- entity- of featuretoggles voor experimentele commandos.
+De options flow beheert dus geen brokercredentials.
 
 ## Runtime-ontwerp
 
-De runtime moet een gedeeld state-object hebben dat:
+De runtime zit in `AsmokeMqttRuntime` en gebruikt een eigen `paho-mqtt` client. Die runtime:
 
-- de MQTT-verbinding beheert;
-- reconnects centraal afhandelt;
-- berichtpayloads decodeert naar een intern statusmodel;
-- entities signaleert wanneer nieuwe data beschikbaar is.
+- valideert brokerconnectiviteit;
+- beheert reconnectgedrag;
+- verwerkt status-, temperatuur- en result-topics;
+- houdt gedeelde state bij voor entities en diagnostics;
+- blijft kunnen laden ook als de BBQ uit staat.
 
-Omdat Asmoke push-gebaseerd is, ligt polling niet voor de hand. Een coordinator-achtig runtime-object is wel nuttig voor centrale foutafhandeling, statusopslag en entity-updates.
+Voor discovery wordt tijdelijk een losse MQTT-client gebruikt die alleen zoekt naar een bruikbaar `device_id` en eventuele metadata zoals grill type of firmwareversie.
 
-## Entities
+## Entities en services
 
-Waarschijnlijk nuttige entities:
+De actuele platforms zijn:
 
-- sensor grill temperature 1
-- sensor grill temperature 2
-- sensor probe A temperature
-- sensor probe B temperature
-- sensor battery level
-- sensor roast progress
-- sensor target temperature
-- sensor target time
-- binary sensor ignition status
-- binary sensor online or active status
-- select mode
-- number target temperature
+- sensors;
+- binary sensors;
+- number.
 
-Voor nieuwe integraties hoort `has_entity_name = True` de standaard te zijn.
+Daarmee exposeert de integratie onder meer grill- en probetemperaturen, battery/roast/targetinformatie, brokerstatus, device-online status en een number entity voor smoke target temperature.
 
-## Services
+Beschikbare services:
 
-Aanbevolen services in de eerste implementatiefase:
-
-- `publish_raw_action` voor gecontroleerd reverse-engineeren;
-- `set_smoke_target_temp` voor bevestigde temperatuurcommando's.
-
-Expose alleen services waarvoor payloadvorm en devicegedrag echt bevestigd zijn.
+- `publish_raw_action`;
+- `set_smoke_target_temp`.
 
 ## Diagnostics
 
-Voeg diagnostics toe waarmee een gebruiker zonder packet capture kan zien:
-
-- verbonden of verbroken brokerstatus;
-- gesubscribe topics;
-- laatst ontvangen payloadtypes;
-- laatst bekende device-status;
-- foutdetails met redacties voor secrets.
-
-Redigeer in ieder geval:
-
-- username;
-- password;
-- client-id;
-- complete device-identifiers als je die niet publiek wilt tonen.
-
-## Vertalingen
-
-Voor custom integrations gebruik je geen `strings.json`. Gebruik `translations/en.json` en eventuele extra taalbestanden in dezelfde map.
-
-Dat is belangrijk, omdat `strings.json` en placeholder-verwijzingen build-time features van Home Assistant core zijn en niet automatisch werken voor custom integrations.
-
-## Brand assets
-
-Voor custom integrations horen brand assets lokaal in de integration, onder `custom_components/asmoke_cloud/brand/`.
+Diagnostics bevatten runtime- en payloadinformatie, maar redigeren gevoelige velden zoals username, password en client-id.
 
 ## Security-grens
 
-Deze repo moet publieke documentatie en code bevatten, maar geen live secrets. Houd daarom een lokaal, gitignored bestand aan voor:
+Publieke repo-inhoud bevat geen live brokersecrets. Voor lokaal voorinvullen gebruikt de integratie:
 
-- broker host;
-- username;
-- password;
-- device-id's die je niet publiek wilt maken;
-- testtopics of captures die privacygevoelig zijn.
+- `custom_components/asmoke_cloud/local_auth.json`;
+- `asmoke_cloud_local_auth.json` in de Home Assistant config-root;
+- environment variables zoals `ASMOKE_CLOUD_USERNAME` en `ASMOKE_CLOUD_PASSWORD`.
 
-## Aanbevolen uitvoeringsvolgorde
+## Belangrijkste beperking van de huidige architectuur
 
-1. Start met read-only telemetry.
-2. Voeg daarna config flow en reauth goed af.
-3. Voeg daarna write-services toe voor bevestigde commandos.
-4. Voeg diagnostics, tests en translations toe.
-5. Maak het daarna HACS-ready.
+Onboarding is nu semi-automatisch: `device_id` discovery werkt, maar brokercredentials moeten nog steeds bekend zijn of lokaal worden vooringevuld. Er is geen bruikbare lokale LAN-integratie gevonden die dit volledig vervangt.

@@ -8,6 +8,7 @@ from custom_components.asmoke_cloud.const import (
     SERVICE_PUBLISH_RAW_ACTION,
     SERVICE_SET_SMOKE_TARGET_TEMP,
 )
+from custom_components.asmoke_cloud.mqtt import AsmokeMqttRuntime
 
 
 async def test_publish_raw_action_service(hass, mock_entry, bypass_runtime_start) -> None:
@@ -46,3 +47,14 @@ async def test_set_target_temp_service(hass, mock_entry, bypass_runtime_start) -
     )
 
     coordinator.runtime.async_publish_smoke_target_temp.assert_awaited_once_with(125)
+
+
+async def test_runtime_smoke_target_temp_uses_vendor_payload_key(hass, mock_entry) -> None:
+    runtime = AsmokeMqttRuntime(hass, mock_entry.entry_id, mock_entry.data, mock_entry.options)
+    runtime.async_publish_action = AsyncMock()
+
+    await runtime.async_publish_smoke_target_temp(125)
+
+    runtime.async_publish_action.assert_awaited_once_with(
+        "Smoke", {"targetTemp": 125}
+    )

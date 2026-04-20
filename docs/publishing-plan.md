@@ -1,84 +1,53 @@
 # HACS En Publicatieplan
 
-## Korte conclusie
+## Status
 
-Als deze repo publiek verdeeld moet worden via Home Assistant, is de juiste route een HACS `integration` repository. Niet een `plugin`, niet een app en niet primair een add-on.
+Deze repository is inmiddels een publiceerbare HACS `integration` repository. De integratie staat onder `custom_components/asmoke_cloud`, heeft een config flow, tests, een `hacs.json`, semver-versies en GitHub Releases.
 
-## Wat HACS verwacht
+## Huidige publicatievorm
 
-Voor een HACS integration-repo is dit de relevante basis:
+- distributievorm: Home Assistant custom integration;
+- HACS type: `integration`;
+- repositorystatus: publieke GitHub-repo met semver GitHub Releases;
+- actuele installatieroute: custom repository in HACS.
 
-- een publieke GitHub-repository;
-- precies een integratie per repo;
-- de integration onder `custom_components/<domain>/`;
-- een duidelijke README;
-- een repositorybeschrijving en logische GitHub-topics;
-- releases zodra de integratie installeerbaar is;
-- later een `hacs.json` in de repo-root.
+De default branch is in HACS verborgen, zodat gebruikers een named release installeren in plaats van een commit-hash.
 
-## Wat nu nog niet moet
+## Wat HACS hier nu gebruikt
 
-Deze repo heeft nu nog geen werkende integration-code. Voeg daarom nog geen misleidende HACS-bestanden toe alleen om de repo er "klaar" uit te laten zien.
+Voor deze repo zijn de relevante bronnen:
 
-Concreet:
+- `custom_components/asmoke_cloud/manifest.json` voor de integratieversie;
+- `hacs.json` voor HACS metadata;
+- GitHub Releases voor zichtbare versienummers in HACS;
+- `README.md` en `docs/user-guide.md` voor installatie- en gebruiksinstructies.
 
-- pas `hacs.json` toevoegen zodra de integration echt installeerbaar is;
-- pas releases maken zodra er bruikbare installabele code staat;
-- pas HACS store-submissie doen nadat custom repository-installatie stabiel werkt.
+Alleen tags zijn hiervoor niet genoeg; HACS kijkt naar gepubliceerde GitHub Releases.
 
-## Minimale technische eisen voor de eerste codefase
+## Releasechecklist
 
-- `manifest.json` met `config_flow: true`
-- `config_flow.py`
-- ten minste een basis `__init__.py`
-- ten minste een platform zoals `sensor.py`
-- `translations/en.json`
-- tests voor setup en config flow
+Gebruik voor iedere nieuwe release deze volgorde:
 
-## Quality scale doel
+1. Werk code en documentatie bij.
+2. Draai `pytest tests/components/asmoke_cloud -q`.
+3. Werk `custom_components/asmoke_cloud/manifest.json` bij naar de nieuwe semver-versie.
+4. Voeg een nieuwe entry toe aan `CHANGELOG.md`.
+5. Commit de releasevoorbereiding.
+6. Maak en push een git-tag met dezelfde versie, bijvoorbeeld `v0.3.2`.
+7. Maak daarna een GitHub Release voor die tag.
 
-Voor een nieuwe integratie is Bronze het minimale kwaliteitsniveau om serieus te mikken. Praktisch betekent dat:
+## Huidige validatie
 
-- UI-configuratie via config flow;
-- basis documentatie;
-- geautomatiseerde tests voor setup;
-- nette foutafhandeling.
+De repo heeft op dit moment:
 
-Silver is het eerstvolgende realistische doel:
+- componenttests via `pytest-homeassistant-custom-component`;
+- een GitHub Actions workflow die `pytest` draait;
+- documentatie voor onboarding, local auth, troubleshooting en releasegeschiedenis.
 
-- stabiele reconnects;
-- goede fout- en authafhandeling;
-- reauth-flow;
-- betere troubleshooting-documentatie.
+## Logische vervolgstappen
 
-## Teststrategie
+Voor latere iteraties zijn dit de meest logische verbeteringen:
 
-Aanbevolen testset:
-
-- config flow success en auth failure;
-- reauth-flow;
-- entity setup vanuit bekende payloads;
-- service calls naar MQTT publish;
-- diagnostics-redactie;
-- reconnect- of unavailable-gedrag.
-
-Voor custom integrations is `pytest-homeassistant-custom-component` de praktische testbasis.
-
-## CI en validatie
-
-Zodra de eerste code er staat:
-
-- run `ruff` of vergelijkbare linting;
-- run `pytest`;
-- valideer de integrationstructuur met `hassfest`;
-- voeg een GitHub Action toe voor linting en tests.
-
-## Releasepad
-
-Aanbevolen volgorde:
-
-1. Werk lokaal en valideer met tests.
-2. Maak de repo bruikbaar als handmatige custom repository in HACS.
-3. Maak een eerste tagged release.
-4. Voeg HACS-validatie toe.
-5. Overweeg daarna pas opname in de HACS default store.
+- `hassfest` of extra linting toevoegen aan CI;
+- releaseautomatisering toevoegen via GitHub Actions;
+- pas daarna bekijken of opname in de HACS default store zinvol is.

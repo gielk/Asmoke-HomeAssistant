@@ -59,13 +59,15 @@ Bevestigde velden:
 - `probeATemp`
 - `probeBTemp`
 
-### Command payload
+### Observed raw command payload
 
 Voorbeeld:
 
 ```json
 {"type":"action","command":"Smoke","data":{"targetTemp":110}}
 ```
+
+Dit is het direct op de broker waargenomen vendorformaat. De Home Assistant service `set_smoke_target_temp` gebruikt in Home Assistant het veld `target_temp`, maar vertaalt dat intern terug naar dit payloadformaat.
 
 ### Result payload
 
@@ -101,6 +103,7 @@ De kortste bruikbare route is een eigen MQTT-client in een Home Assistant custom
 ## Grenzen en open punten
 
 - Niet elk commandopayload is al gevalideerd.
-- Device-onboarding moet nog ontworpen worden.
+- Device-onboarding is inmiddels geïmplementeerd als handmatige invoer of tijdelijke MQTT discovery van `device_id`.
+- Brokercredentials moeten nog steeds bekend zijn of lokaal worden vooringevuld.
 - Secrets en exacte device-identifiers blijven buiten deze repo.
 - Een lokale MITM- of sniffing-helper is optioneel, maar geen goede primaire runtime-architectuur.
