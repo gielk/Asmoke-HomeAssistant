@@ -183,6 +183,7 @@ Daarin zitten:
 
 - één gedeelde target temperature voor `smoke` en `quick`;
 - een moduskiezer via climate preset modes `smoke` en `quick`;
+- target temperature-stappen van 10 graden, gelijk aan de appbediening;
 - `off` en `heat` als climate HVAC-modes.
 
 Praktisch gebruik:
@@ -191,7 +192,7 @@ Praktisch gebruik:
 - kies preset `quick` als je een quick-cook wilt starten;
 - stel de temperatuur in via de climate target temperature;
 - zet daarna de climate op `heat` om de gekozen modus te starten;
-- zet de climate op `off` om een stop-commando te sturen.
+- zet de climate op `off` of gebruik `climate.turn_off` om een stop-commando te sturen.
 
 Voorbeeld YAML voor Smoke via climate:
 

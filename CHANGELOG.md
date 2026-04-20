@@ -6,6 +6,12 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.4 - 2026-04-20
+
+- Fixed the initial `paho.mqtt.client` import to happen off the Home Assistant event loop, avoiding blocking-operation warnings during startup.
+- Made climate `off` explicitly publish the confirmed Stop action through both HVAC mode changes and `climate.turn_off`.
+- Set the climate target temperature step to 10 degrees to match the vendor app behavior.
+
 ## v0.4.0-beta.3 - 2026-04-20
 
 - Added a climate entity with one shared target temperature and selectable `smoke` or `quick` preset modes.

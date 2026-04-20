@@ -34,10 +34,13 @@ class AsmokePitClimate(RestoreEntity, AsmokeCoordinatorEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_preset_modes = list(CLIMATE_PRESET_MODES)
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = 10
     _attr_min_temp = MIN_TARGET_TEMPERATURE
     _attr_max_temp = MAX_TARGET_TEMPERATURE
 
@@ -119,6 +122,12 @@ class AsmokePitClimate(RestoreEntity, AsmokeCoordinatorEntity, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
         await self._async_start_selected_mode()
+
+    async def async_turn_off(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def async_turn_on(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.HEAT)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         if preset_mode not in CLIMATE_PRESET_MODES:

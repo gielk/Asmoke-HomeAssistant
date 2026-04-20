@@ -39,6 +39,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_MQTT_MODULE: Any | None = None
 
 
 class AsmokeConnectionError(HomeAssistantError):
@@ -54,12 +55,26 @@ class AsmokeDiscoveryError(AsmokeConnectionError):
 
 
 def _mqtt_module() -> Any:
+    global _MQTT_MODULE
+
+    if _MQTT_MODULE is not None:
+        return _MQTT_MODULE
+
     try:
-        return import_module("paho.mqtt.client")
+        _MQTT_MODULE = import_module("paho.mqtt.client")
     except ModuleNotFoundError as err:
         raise AsmokeConnectionError(
             "paho-mqtt is not available yet; restart Home Assistant and try again"
         ) from err
+
+    return _MQTT_MODULE
+
+
+async def _async_mqtt_module() -> Any:
+    if _MQTT_MODULE is not None:
+        return _MQTT_MODULE
+
+    return await asyncio.to_thread(_mqtt_module)
 
 
 def _utcnow() -> datetime:
@@ -456,7 +471,7 @@ class AsmokeMqttRuntime:
         if self._started:
             return
 
-        mqtt = _mqtt_module()
+        mqtt = await _async_mqtt_module()
         client = mqtt.Client(client_id=self.client_id, protocol=mqtt.MQTTv311)
         client.username_pw_set(username=self.username, password=self.password)
         client.reconnect_delay_set(min_delay=5, max_delay=60)

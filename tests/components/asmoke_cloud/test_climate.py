@@ -142,6 +142,62 @@ async def test_climate_turn_off_publishes_stop(
     coordinator.runtime.async_publish_stop.assert_awaited_once_with()
 
 
+async def test_climate_turn_off_service_publishes_stop(
+    hass,
+    mock_entry,
+    bypass_runtime_start,
+) -> None:
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][mock_entry.entry_id]
+    coordinator.async_set_updated_data({"broker_connected": True, "mode": "SMOKE"})
+    coordinator.runtime.async_publish_stop = AsyncMock()
+
+    entity_registry = er.async_get(hass)
+    climate_entity_id = entity_registry.async_get_entity_id(
+        "climate",
+        DOMAIN,
+        f"{coordinator.runtime.device_id}_pit_controller",
+    )
+    assert climate_entity_id is not None
+
+    await hass.services.async_call(
+        "climate",
+        "turn_off",
+        {"entity_id": climate_entity_id},
+        blocking=True,
+    )
+
+    coordinator.runtime.async_publish_stop.assert_awaited_once_with()
+
+
+async def test_climate_target_temperature_step_matches_vendor_app(
+    hass,
+    mock_entry,
+    bypass_runtime_start,
+) -> None:
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][mock_entry.entry_id]
+    coordinator.async_set_updated_data({"broker_connected": True})
+
+    entity_registry = er.async_get(hass)
+    climate_entity_id = entity_registry.async_get_entity_id(
+        "climate",
+        DOMAIN,
+        f"{coordinator.runtime.device_id}_pit_controller",
+    )
+    assert climate_entity_id is not None
+
+    state = hass.states.get(climate_entity_id)
+    assert state is not None
+    assert state.attributes["target_temp_step"] == 10
+
+
 async def test_mode_specific_target_temperature_numbers_are_not_created(
     hass,
     mock_entry,

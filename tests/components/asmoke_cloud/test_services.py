@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from homeassistant.exceptions import ServiceValidationError
@@ -18,7 +19,7 @@ from custom_components.asmoke_cloud.const import (
     SERVICE_STOP_COOK,
     SERVICE_SET_SMOKE_TARGET_TEMP,
 )
-from custom_components.asmoke_cloud.mqtt import AsmokeMqttRuntime
+from custom_components.asmoke_cloud.mqtt import AsmokeMqttRuntime, _mqtt_module
 
 
 async def test_publish_raw_action_service(hass, mock_entry, bypass_runtime_start) -> None:
@@ -235,3 +236,33 @@ async def test_runtime_stop_uses_confirmed_vendor_payload(hass, mock_entry) -> N
     await runtime.async_publish_stop()
 
     runtime.async_publish_action.assert_awaited_once_with("Stop")
+
+
+async def test_runtime_start_imports_mqtt_module_off_loop(hass, mock_entry) -> None:
+    runtime = AsmokeMqttRuntime(hass, mock_entry.entry_id, mock_entry.data, mock_entry.options)
+    fake_client = Mock()
+    fake_module = SimpleNamespace(
+        Client=Mock(return_value=fake_client),
+        MQTTv311=object(),
+    )
+
+    with (
+        patch("custom_components.asmoke_cloud.mqtt._MQTT_MODULE", None),
+        patch(
+            "custom_components.asmoke_cloud.mqtt.asyncio.to_thread",
+            new=AsyncMock(return_value=fake_module),
+        ) as mock_to_thread,
+    ):
+        await runtime.async_start()
+
+    mock_to_thread.assert_awaited_once_with(_mqtt_module)
+    fake_module.Client.assert_called_once_with(
+        client_id=runtime.client_id,
+        protocol=fake_module.MQTTv311,
+    )
+    fake_client.connect_async.assert_called_once_with(
+        runtime.host,
+        runtime.port,
+        runtime.keepalive,
+    )
+    fake_client.loop_start.assert_called_once_with()
