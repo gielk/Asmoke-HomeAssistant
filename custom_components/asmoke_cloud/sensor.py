@@ -79,11 +79,6 @@ SENSOR_DESCRIPTIONS: tuple[AsmokeSensorDescription, ...] = (
         value_key="mode",
     ),
     AsmokeSensorDescription(
-        key="wifi_status",
-        translation_key="wifi_status",
-        value_key="wifi_status",
-    ),
-    AsmokeSensorDescription(
         key="last_result_message",
         translation_key="last_result_message",
         value_key="last_result_message",

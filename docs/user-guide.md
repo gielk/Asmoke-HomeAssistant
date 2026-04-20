@@ -109,11 +109,12 @@ Ondersteunde environment variables:
 
 Na installatie maakt de integration entities aan voor de gekozen smoker.
 
-Belangrijkste entities in de huidige beta:
+Belangrijkste entities in de huidige versie:
 
 - `climate.asmoke_backyard_pit_thermostat` voor smoke en quick met een gedeelde target temperature;
 - `number.asmoke_backyard_quick_target_time` voor Quick target time;
 - `binary_sensor.asmoke_backyard_cook_active` als aanbevolen aan/uit-status voor de lopende cook;
+- `binary_sensor.asmoke_backyard_wi_fi_connected` als eenvoudige Wi-Fi verbonden-vlag, niet als signaalsterkte;
 - `sensor.asmoke_backyard_target_time` voor de door de smoker gerapporteerde target time;
 - `button.asmoke_backyard_start_quick_cook` voor direct een Quick-cook starten;
 - `button.asmoke_backyard_stop_cook` voor direct een Stop sturen.
@@ -131,6 +132,7 @@ Praktische eerste checks:
 Voor dashboards en automations is dit het belangrijkste onderscheid:
 
 - gebruik `binary_sensor...cook_active` als de nette vraag is of er een cook loopt;
+- gebruik `binary_sensor...wi_fi_connected` alleen als verbonden/niet-verbonden indicatie van de Wi-Fi-module;
 - gebruik `sensor...mode` alleen als informatieve vendorstatus;
 - gebruik `binary_sensor...ignition_active` alleen als laag-niveau signaal, niet als hoofd-aan/uit-status.
 

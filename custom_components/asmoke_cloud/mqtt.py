@@ -463,6 +463,7 @@ class AsmokeMqttRuntime:
             "target_time": None,
             "mode": None,
             "wifi_status": None,
+            "wifi_connected": None,
             "ignition_status": None,
             "last_result_message": None,
             "status_payload": {},
@@ -725,6 +726,7 @@ class AsmokeMqttRuntime:
         )
         self._state["mode"] = payload.get("mode")
         self._state["wifi_status"] = payload.get("wifiStatus")
+        self._state["wifi_connected"] = _normalize_bool(payload.get("wifiStatus"))
 
         ignition = _normalize_bool(payload.get("ignitionStatus"))
         if ignition is None:

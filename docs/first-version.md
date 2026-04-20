@@ -31,11 +31,11 @@ Beschikbare entitytypes:
 - sensor voor roast progress;
 - sensor voor target time;
 - sensor voor mode;
-- sensor voor Wi-Fi status;
 - sensor voor last result message;
 - binary sensor voor broker connected;
 - binary sensor voor device online;
 - binary sensor voor cook active;
+- binary sensor voor Wi-Fi connected;
 - binary sensor voor ignition active;
 - climate entity voor pit thermostat;
 - number entity voor quick target time;
@@ -63,6 +63,7 @@ Bevestigd en ingebouwd:
 - `probeATemp = 499` wordt behandeld als probe niet aangesloten;
 - `probeBTemp = 499` wordt behandeld als probe niet aangesloten.
 - `status: idle` is de autoritatieve off-state, ook als `mode` nog een oudere waarde zoals `QUICK` bevat;
+- `wifiStatus` wordt op dit moment behandeld als een verbonden/niet-verbonden vlag en niet als bruikbare Wi-Fi-signaalsterkte;
 - `binary_sensor.cook_active` is daarom het aanbevolen automation- en dashboardsignaal voor aan of uit.
 
 ## Wat nog beperkt is

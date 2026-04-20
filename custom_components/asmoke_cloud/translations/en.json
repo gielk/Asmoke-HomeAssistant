@@ -198,9 +198,6 @@
       "mode": {
         "name": "Mode"
       },
-      "wifi_status": {
-        "name": "Wi-Fi status"
-      },
       "last_result_message": {
         "name": "Last result message"
       }
@@ -214,6 +211,9 @@
       },
       "cook_active": {
         "name": "Cook active"
+      },
+      "wifi_connected": {
+        "name": "Wi-Fi connected"
       },
       "ignition_status": {
         "name": "Ignition active"

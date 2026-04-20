@@ -44,6 +44,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[AsmokeBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     AsmokeBinarySensorDescription(
+        key="wifi_connected",
+        translation_key="wifi_connected",
+        value_key="wifi_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    AsmokeBinarySensorDescription(
         key="ignition_status",
         translation_key="ignition_status",
         value_key="ignition_status",
