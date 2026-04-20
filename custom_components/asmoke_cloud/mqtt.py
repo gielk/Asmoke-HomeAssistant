@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    ACTIVE_STATUS_VALUES,
     CONF_DEBUG_LOGGING,
     CONF_EXTRA_TOPICS,
     CONF_KEEPALIVE,
@@ -31,6 +32,7 @@ from .const import (
     DEFAULT_KEEPALIVE,
     DEFAULT_OFFLINE_TIMEOUT,
     DEFAULT_TARGET_TEMPERATURE,
+    INACTIVE_STATUS_VALUES,
     action_topic,
     roast_topic,
     result_topic,
@@ -124,6 +126,18 @@ def _normalize_probe_temp(value: Any) -> int | None:
     if normalized == 499:
         return None
     return normalized
+
+
+def _derive_cook_active(status: str | None) -> bool | None:
+    if status is None:
+        return None
+
+    normalized_status = status.strip().upper()
+    if normalized_status in ACTIVE_STATUS_VALUES:
+        return True
+    if normalized_status in INACTIVE_STATUS_VALUES:
+        return False
+    return None
 
 
 def _decode_raw_payload(payload: bytes) -> Any:
@@ -444,6 +458,7 @@ class AsmokeMqttRuntime:
             "battery_level": None,
             "roast_progress": None,
             "status": None,
+            "cook_active": None,
             "target_temp": None,
             "target_time": None,
             "mode": None,
@@ -696,7 +711,9 @@ class AsmokeMqttRuntime:
             self._state["firmware_version"] = firmware_version
         self._state["battery_level"] = _normalize_int(payload.get("batteryLevel"))
         self._state["roast_progress"] = _normalize_int(payload.get("roastProgress"))
-        self._state["status"] = _normalize_string(payload.get("status"))
+        normalized_status = _normalize_string(payload.get("status"))
+        self._state["status"] = normalized_status
+        self._state["cook_active"] = _derive_cook_active(normalized_status)
         self._state["target_temp"] = _normalize_int(
             payload.get("targetTemp", grill.get("targetTemp"))
         )

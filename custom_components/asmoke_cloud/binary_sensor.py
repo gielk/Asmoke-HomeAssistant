@@ -38,6 +38,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[AsmokeBinarySensorDescription, ...] = (
         always_available=True,
     ),
     AsmokeBinarySensorDescription(
+        key="cook_active",
+        translation_key="cook_active",
+        value_key="cook_active",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+    AsmokeBinarySensorDescription(
         key="ignition_status",
         translation_key="ignition_status",
         value_key="ignition_status",

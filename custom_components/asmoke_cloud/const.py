@@ -15,6 +15,8 @@ DOMAIN = "asmoke_cloud"
 NAME = "Asmoke Cloud"
 DEFAULT_CLIMATE_PRESET_MODE = "smoke"
 CLIMATE_PRESET_MODES: tuple[str, str] = ("smoke", "quick")
+ACTIVE_STATUS_VALUES: frozenset[str] = frozenset({"RUNNING"})
+INACTIVE_STATUS_VALUES: frozenset[str] = frozenset({"IDLE", "OFF", "STOPPED"})
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,

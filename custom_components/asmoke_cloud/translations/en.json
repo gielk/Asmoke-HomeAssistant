@@ -212,6 +212,9 @@
       "device_online": {
         "name": "Device online"
       },
+      "cook_active": {
+        "name": "Cook active"
+      },
       "ignition_status": {
         "name": "Ignition active"
       }

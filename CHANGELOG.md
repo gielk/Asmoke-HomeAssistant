@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.0-beta.6 - 2026-04-20
+
+- Added a `Cook active` binary sensor that follows the confirmed smoker `status` field and cleanly reports whether a cook is running or idle.
+- Reused the same derived cook-status logic in the climate entity so the thermostat state and the new binary sensor stay in sync.
+
 ## v0.4.0-beta.5 - 2026-04-20
 
 - Kept the climate entity `off` after Stop once the smoker reports `status: idle`, even if vendor telemetry keeps the previous cook mode value.
