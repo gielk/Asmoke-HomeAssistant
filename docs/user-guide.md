@@ -111,6 +111,17 @@ Je kunt in deze eerste versie:
 - de smoke target temperature aanpassen;
 - een raw action publiceren voor gecontroleerde experimenten.
 
+## Probe niet aangesloten
+
+Bij Asmoke lijkt de waarde `499` voor `probeATemp` of `probeBTemp` in de praktijk een sentinelwaarde te zijn voor een niet-aangesloten probe.
+
+In deze integration wordt `499` daarom behandeld als geen geldige temperatuurwaarde.
+
+Praktisch betekent dat:
+
+- een probe met waarde `499` wordt niet als echte temperatuur getoond;
+- de betreffende probe-entity wordt dan unavailable of leeg in plaats van `499` graden.
+
 ## Services
 
 Beschikbare services:

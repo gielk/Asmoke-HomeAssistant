@@ -92,6 +92,13 @@ def _normalize_int(value: Any) -> int | None:
         return None
 
 
+def _normalize_probe_temp(value: Any) -> int | None:
+    normalized = _normalize_int(value)
+    if normalized == 499:
+        return None
+    return normalized
+
+
 def _clean_extra_topics(value: Any) -> list[str]:
     if value is None or value == "":
         return []
@@ -450,8 +457,8 @@ class AsmokeMqttRuntime:
         self._state["temperatures_payload"] = payload
         self._state["grill_temp_1"] = _normalize_int(payload.get("grillTemp1"))
         self._state["grill_temp_2"] = _normalize_int(payload.get("grillTemp2"))
-        self._state["probe_a_temp"] = _normalize_int(payload.get("probeATemp"))
-        self._state["probe_b_temp"] = _normalize_int(payload.get("probeBTemp"))
+        self._state["probe_a_temp"] = _normalize_probe_temp(payload.get("probeATemp"))
+        self._state["probe_b_temp"] = _normalize_probe_temp(payload.get("probeBTemp"))
 
     def _apply_result_payload(self, payload: Any) -> None:
         self._state["result_payload"] = payload if isinstance(payload, dict) else {"raw": payload}

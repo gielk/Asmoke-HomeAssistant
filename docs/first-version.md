@@ -39,6 +39,11 @@ Bevestigd en ingebouwd:
 - smoke target temperature via de number-entity;
 - smoke target temperature via `asmoke_cloud.set_smoke_target_temp`.
 
+## Bekende datainterpretaties in versie 1
+
+- `probeATemp = 499` wordt behandeld als probe niet aangesloten;
+- `probeBTemp = 499` wordt behandeld als probe niet aangesloten.
+
 ## Wat nog beperkt is
 
 Nog niet volledig uitgewerkt in versie 1:
