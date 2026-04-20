@@ -41,6 +41,12 @@ De volledige handleiding staat in [docs/user-guide.md](docs/user-guide.md).
 
 Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
 
+## Releases
+
+Deze repository gebruikt vanaf nu semver-tags voor HACS-releases. De huidige release is `v0.3.0`.
+
+Het overzicht van functionele releases staat in [CHANGELOG.md](CHANGELOG.md).
+
 ## Belangrijkste bestanden
 
 - Integratiecode: [custom_components/asmoke_cloud](custom_components/asmoke_cloud)
