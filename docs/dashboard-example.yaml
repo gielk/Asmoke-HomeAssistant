@@ -6,7 +6,7 @@ views:
       - type: markdown
         content: |
           ## Asmoke Backyard
-          Gebruik de climate-kaart voor smoke of quick en pas `Quick target time` live aan tijdens een actieve Quick-cook.
+          Use the climate card for smoke or quick and adjust `Quick target time` live during an active Quick cook.
 
       - type: grid
         columns: 2

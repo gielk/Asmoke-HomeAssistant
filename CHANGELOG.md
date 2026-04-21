@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.3 - 2026-04-21
+
+- Translated the public documentation set to English so the project can be shared externally without Dutch-only guides and examples.
+- Polished the README, user guide, feature overview, dashboard guide, automation examples, architecture notes, and research summary so they read like public project documentation instead of internal notes.
+
 ## v0.4.2 - 2026-04-20
 
 - Fixed the initial config-flow menu so the `Discover Asmoke device` and `Enter device ID manually` options render with readable labels.

@@ -1,58 +1,58 @@
-# Asmoke Onderzoeksverslag
+# Asmoke Research Summary
 
-## Doel
+## Goal
 
-Doel van het onderzoek was:
+The goal of the research was to:
 
-1. vaststellen hoe Asmoke op het netwerk communiceert;
-2. bepalen of er een bruikbare route is voor Home Assistant;
-3. bevestigen of directe broker-toegang mogelijk is;
-4. de topicstructuur en payloadvormen in kaart brengen.
+1. determine how Asmoke communicates on the network;
+2. decide whether there is a usable route for Home Assistant;
+3. confirm whether direct broker access is possible;
+4. map the topic structure and payload formats.
 
-## Publiek deel van de bevestigde bevindingen
+## Public part of the confirmed findings
 
-### 1. Geen bruikbare lokale API gevonden
+### 1. No usable local API was found
 
-Er is geen stabiele lokale HTTP- of MQTT-interface op de smoker gevonden die logisch als Home Assistant LAN-integratie gebruikt kan worden. De relevante communicatie loopt via de cloud.
+No stable local HTTP or MQTT interface was found on the smoker that would make sense as a Home Assistant LAN integration. The relevant communication goes through the cloud.
 
-### 2. Relevante transportlaag is cloud MQTT
+### 2. The relevant transport layer is cloud MQTT
 
-De app en smoker gebruiken raw MQTT via een cloudbroker op poort `1883`.
+The app and smoker use raw MQTT through a cloud broker on port `1883`.
 
-### 3. De smoker publiceert zelf telemetrie
+### 3. The smoker publishes telemetry on its own
 
-De belangrijke berichten komen niet alleen via de telefoon terug. De smoker publiceert zelf status- en temperatuurupdates naar de broker.
+The important messages do not only return through the phone. The smoker itself publishes status and temperature updates to the broker.
 
-### 4. De app publiceert commando's op een aparte action-topic
+### 4. The app publishes commands on a separate action topic
 
-Er is een duidelijke scheiding tussen:
+There is a clear separation between:
 
-- telemetrie van het device;
-- commando's van de app;
-- result- of statusbevestigingen van het device.
+- telemetry from the device;
+- commands from the app;
+- result or status confirmations from the device.
 
-### 5. Directe broker-login is haalbaar
+### 5. Direct broker login is feasible
 
-Een directe MQTT-login met de uit de app herleide auth is lokaal bevestigd. De exacte credentials staan bewust niet in deze publieke repo.
+A direct MQTT login using credentials derived from the app was confirmed locally. The exact credentials are intentionally not included in this public repository.
 
-## Bevestigde topicpatronen
+## Confirmed topic patterns
 
 - `device/status/<device_id>`
 - `device/temperatures/<device_id>`
 - `device/result/<device_id>`
 - `asmoke/action/<device_id>`
 
-## Bevestigde payloadvormen
+## Confirmed payload shapes
 
-### Temperatuurpayload
+### Temperature payload
 
-Voorbeeld:
+Example:
 
 ```json
 {"grillTemp1":135,"grillTemp2":159,"probeATemp":499,"probeBTemp":499}
 ```
 
-Bevestigde velden:
+Confirmed fields:
 
 - `grillTemp1`
 - `grillTemp2`
@@ -61,25 +61,25 @@ Bevestigde velden:
 
 ### Observed raw command payload
 
-Voorbeeld:
+Example:
 
 ```json
 {"type":"action","command":"Smoke","data":{"targetTemp":110}}
 ```
 
-Dit is het direct op de broker waargenomen vendorformaat. De Home Assistant service `set_smoke_target_temp` gebruikt in Home Assistant het veld `target_temp`, maar vertaalt dat intern terug naar dit payloadformaat.
+This is the vendor format observed directly on the broker. The Home Assistant service `set_smoke_target_temp` uses the field `target_temp` in Home Assistant, but maps it internally back to this vendor payload format.
 
 ### Result payload
 
-Voorbeeld:
+Example:
 
 ```json
 {"type":"result","status":1,"message":"Smoke mode updated: temperature."}
 ```
 
-### Statuspayload
+### Status payload
 
-In captures waren in ieder geval deze velden zichtbaar:
+At minimum, the following fields were visible in captures:
 
 - `status`
 - `batteryLevel`
@@ -91,19 +91,19 @@ In captures waren in ieder geval deze velden zichtbaar:
 - `targetTime`
 - `temperatures`
 
-## Wat dit betekent voor Home Assistant
+## What this means for Home Assistant
 
-De kortste bruikbare route is een eigen MQTT-client in een Home Assistant custom integration. Daarmee kan Home Assistant:
+The shortest useful route is a dedicated MQTT client inside a Home Assistant custom integration. That allows Home Assistant to:
 
-- live telemetrie lezen;
-- statusupdates ontvangen;
-- bevestigde commando's publiceren;
-- result-berichten terugkrijgen.
+- read live telemetry;
+- receive status updates;
+- publish confirmed commands;
+- receive result messages.
 
-## Grenzen en open punten
+## Limits and open points
 
-- Niet elk commandopayload is al gevalideerd.
-- Device-onboarding is inmiddels geïmplementeerd als handmatige invoer of tijdelijke MQTT discovery van `device_id`.
-- Brokercredentials moeten nog steeds bekend zijn of lokaal worden vooringevuld.
-- Secrets en exacte device-identifiers blijven buiten deze repo.
-- Een lokale MITM- of sniffing-helper is optioneel, maar geen goede primaire runtime-architectuur.
+- Not every command payload has been validated yet.
+- Device onboarding is now implemented as manual input or temporary MQTT discovery of `device_id`.
+- Broker credentials still need to be known or prefilled locally.
+- Secrets and exact device identifiers stay out of this repository.
+- A local MITM or sniffing helper is optional, but not a good primary runtime architecture.

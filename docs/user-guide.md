@@ -1,101 +1,101 @@
-# Gebruikershandleiding
+# User Guide
 
-## Doel
+## Overview
 
-Met deze integration verbind je Home Assistant rechtstreeks met de Asmoke cloudbroker. Daardoor kun je Asmoke-telemetrie als Home Assistant entities gebruiken zonder de mobiele app als tussenlaag.
+This integration connects Home Assistant directly to the Asmoke cloud broker, so you can expose Asmoke telemetry and controls in Home Assistant without depending on the mobile app during normal runtime.
 
-## Voorwaarden
+## Requirements
 
-Je hebt nodig:
+You need:
 
-- Home Assistant `2025.1.0` of nieuwer;
-- HACS of handmatige custom component installatie;
-- de brokergegevens die bij jouw Asmoke-opstelling horen of lokaal zijn vooringevuld;
-- internettoegang vanaf Home Assistant naar de Asmoke broker.
+- Home Assistant `2025.1.0` or newer;
+- HACS or a manual custom component installation;
+- the broker credentials for your Asmoke device, or those values prefilled locally;
+- internet access from Home Assistant to the Asmoke broker.
 
-De BBQ hoeft niet aan te staan om de integration te installeren. Als de BBQ uit staat, zal de integration nog steeds laden, maar er komen dan geen live telemetrie-updates binnen.
+The grill does not need to be powered on to install the integration. If the grill is off, the integration will still load, but no live telemetry updates will come in.
 
-## Installatie via HACS
+## Installation via HACS
 
 1. Open HACS in Home Assistant.
-2. Voeg deze repository toe als custom repository.
-3. Kies type `integration`.
-4. Installeer `Asmoke Cloud`.
-5. Herstart Home Assistant.
+2. Add this repository as a custom repository.
+3. Choose type `integration`.
+4. Install `Asmoke Cloud`.
+5. Restart Home Assistant.
 
-## Handmatige installatie
+## Manual installation
 
-1. Kopieer de map `custom_components/asmoke_cloud` naar je Home Assistant configuratiemap onder `custom_components/asmoke_cloud`.
-2. Herstart Home Assistant.
+1. Copy `custom_components/asmoke_cloud` into your Home Assistant configuration directory under `custom_components/asmoke_cloud`.
+2. Restart Home Assistant.
 
-## Dashboard en YAML-voorbeelden
+## Dashboard and YAML examples
 
-Voor de huidige entityset zijn nu drie documentatie-ingangen beschikbaar:
+The repository includes the following documentation for the current entity set:
 
-- [docs/dashboard-example.md](docs/dashboard-example.md) voor een complete Lovelace-view met dashboard-YAML;
-- [docs/dashboard-example.yaml](docs/dashboard-example.yaml) als direct kopieerbaar YAML-bestand;
-- [docs/automation-examples.md](docs/automation-examples.md) voor bijgewerkte automations en helper-gestuurde voorbeelden.
+- [docs/dashboard-example.md](docs/dashboard-example.md) for a complete Lovelace view with dashboard YAML;
+- [docs/dashboard-example.yaml](docs/dashboard-example.yaml) as a directly copyable YAML file;
+- [docs/automation-examples.md](docs/automation-examples.md) for updated automations and helper-driven examples.
 
-## Eerste configuratie
+## Initial configuration
 
 1. Open Home Assistant.
-2. Ga naar `Instellingen -> Apparaten en diensten`.
-3. Klik op `Integratie toevoegen`.
-4. Kies `Asmoke Cloud`.
-5. Kies een van deze routes:
+2. Go to `Settings -> Devices & Services`.
+3. Click `Add Integration`.
+4. Choose `Asmoke Cloud`.
+5. Choose one of these routes:
    `Discover Asmoke device`
    `Enter device ID manually`
-6. Bij discovery:
-   vul optioneel een naam in;
-   controleer host, port, username, password en keepalive;
-   zet de BBQ aan of open de Asmoke app;
-   wacht tot Home Assistant een statusbericht ziet en het `device_id` automatisch leert.
-7. Bij handmatige invoer:
-   vul `device_id` in;
-   vul optioneel een naam in;
-   controleer host, port, username, password en keepalive.
-8. Rond de config flow af.
+6. For discovery:
+  optionally enter a name;
+  verify host, port, username, password, and keepalive;
+  turn on the grill or open the Asmoke app;
+  wait for Home Assistant to receive a fresh status message and learn the `device_id` automatically.
+7. For manual entry:
+  enter `device_id`;
+  optionally enter a name;
+  verify host, port, username, password, and keepalive.
+8. Complete the config flow.
 
-## Waar haal je deze gegevens vandaan?
+## Where do these values come from?
 
-Je haalt deze gegevens niet uit Home Assistant zelf. Voor deze Asmoke integration komen ze uit de Asmoke app-verkeersanalyse of uit een lokaal bestand waarin je ze eerder hebt opgeslagen.
+You do not get these values from Home Assistant itself. For this integration they come from Asmoke app traffic analysis, prior reverse-engineering notes, or a local file where you already stored them.
 
-Voor jouw huidige Asmoke-opstelling zijn deze waarden al eerder bevestigd:
+In practice you need the following values:
 
-- `device_id`: jouw Asmoke device-id
-- `host`: de Asmoke MQTT broker host
-- `port`: de Asmoke MQTT broker poort
-- `username`: de Asmoke app MQTT username
-- `password`: de Asmoke app MQTT password
-- `keepalive`: de gebruikte MQTT keepalive
+- `device_id`
+- `host`
+- `port`
+- `username`
+- `password`
+- `keepalive`
 
-Als je deze waarden al eerder hebt vastgelegd, is de makkelijkste route om ze lokaal te laten voorinvullen via een `local_auth.json` bestand. Dan hoef je ze in de config flow niet handmatig over te typen.
+If you already captured or stored those values, the easiest route is to prefill them locally through a `local_auth.json` file so you do not have to type them manually in the config flow.
 
-Als je ze nog niet hebt, dan zijn er praktisch twee routes:
+If you do not have them yet, there are two realistic options:
 
-1. gebruik de eerder lokaal vastgelegde waarden uit je reverse-engineeringnotities;
-2. of herhaal een packet capture / MITM-analyse om de app-verbinding opnieuw te bevestigen.
+1. reuse values from earlier reverse-engineering notes;
+2. repeat a packet capture or MITM analysis to confirm the app connection again.
 
-De integration kan nu wel automatisch het `device_id` proberen te ontdekken door tijdelijk naar `device/status/+` te luisteren. Dat werkt alleen als Home Assistant al met geldige brokercredentials kan inloggen.
+The integration can try to discover `device_id` automatically by temporarily listening on `device/status/+`, but that only works if Home Assistant can already log in with valid broker credentials.
 
-De repository levert bewust geen vendor-shared MQTT credentials als publieke standaard mee. Als je die gegevens privé al kent, kun je ze lokaal voorinvullen en hoeft discovery meestal alleen nog het `device_id` te leren.
+This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. If you already know those values privately, you can prefill them locally and let discovery learn only the `device_id`.
 
-## Optioneel: lokaal laten voorinvullen
+## Optional local prefilling
 
-Als je de brokergegevens niet steeds wilt invullen, kun je lokaal een bestand gebruiken dat niet naar Git hoort te gaan.
+If you do not want to enter the broker credentials every time, you can use a local file that stays out of Git.
 
-Gebruik als basis:
+Use this as a base:
 
 - `custom_components/asmoke_cloud/local_auth.json.example`
 
-Het `device_id` is optioneel in dit bestand als je discovery wilt gebruiken.
+`device_id` is optional in this file if you want to use discovery.
 
-Ondersteunde locaties:
+Supported locations:
 
 1. `custom_components/asmoke_cloud/local_auth.json`
-2. `asmoke_cloud_local_auth.json` in de Home Assistant config-root
+2. `asmoke_cloud_local_auth.json` in the Home Assistant config root
 
-Ondersteunde environment variables:
+Supported environment variables:
 
 - `ASMOKE_CLOUD_HOST`
 - `ASMOKE_CLOUD_PORT`
@@ -105,86 +105,86 @@ Ondersteunde environment variables:
 - `ASMOKE_CLOUD_DEVICE_ID`
 - `ASMOKE_CLOUD_NAME`
 
-## Hoe je het gebruikt
+## What gets created
 
-Na installatie maakt de integration entities aan voor de gekozen smoker.
+After installation, the integration creates entities for the selected smoker.
 
-Belangrijkste entities in de huidige versie:
+Main entities you will typically use:
 
-- `climate.asmoke_backyard_pit_thermostat` voor smoke en quick met een gedeelde target temperature;
-- `number.asmoke_backyard_quick_target_time` voor Quick target time;
-- `binary_sensor.asmoke_backyard_cook_active` als aanbevolen aan/uit-status voor de lopende cook;
-- `binary_sensor.asmoke_backyard_wi_fi_connected` als eenvoudige Wi-Fi verbonden-vlag, niet als signaalsterkte;
-- `sensor.asmoke_backyard_target_time` voor de door de smoker gerapporteerde target time;
-- `button.asmoke_backyard_start_quick_cook` voor direct een Quick-cook starten;
-- `button.asmoke_backyard_stop_cook` voor direct een Stop sturen.
+- `climate.asmoke_backyard_pit_thermostat` for smoke and quick with a shared target temperature;
+- `number.asmoke_backyard_quick_target_time` for Quick target time;
+- `binary_sensor.asmoke_backyard_cook_active` as the recommended on/off state for the running cook;
+- `binary_sensor.asmoke_backyard_wi_fi_connected` as a simple Wi-Fi connected flag, not as signal strength;
+- `sensor.asmoke_backyard_target_time` for the target time reported by the smoker;
+- `button.asmoke_backyard_start_quick_cook` to start a Quick cook directly;
+- `button.asmoke_backyard_stop_cook` to send Stop directly.
 
-Praktische eerste checks:
+Recommended first checks:
 
-1. Kijk of `broker connected` aan staat.
-2. Kijk of `device online` aan of uit staat.
-3. Kijk of `cook active` uit staat zolang er geen cook draait.
-4. Zet de BBQ aan of open de Asmoke app zodat het device weer berichten publiceert.
-5. Controleer of temperatuur-, target time- en statusentities waarden krijgen.
+1. Check whether `broker connected` is on.
+2. Check whether `device online` is on or off.
+3. Check whether `cook active` is off while no cook is running.
+4. Turn on the grill or open the Asmoke app so the device starts publishing messages again.
+5. Check whether temperature, target time, and status entities receive values.
 
-## Hoe je de status moet interpreteren
+## Status interpretation
 
-Voor dashboards en automations is dit het belangrijkste onderscheid:
+For dashboards and automations, this is the most important distinction:
 
-- gebruik `binary_sensor...cook_active` als de nette vraag is of er een cook loopt;
-- gebruik `binary_sensor...wi_fi_connected` alleen als verbonden/niet-verbonden indicatie van de Wi-Fi-module;
-- gebruik `sensor...mode` alleen als informatieve vendorstatus;
-- gebruik `binary_sensor...ignition_active` alleen als laag-niveau signaal, niet als hoofd-aan/uit-status.
+- use `binary_sensor...cook_active` when the question is whether a cook is running;
+- use `binary_sensor...wi_fi_connected` only as a connected/disconnected indication for the Wi-Fi module;
+- use `sensor...mode` only as informational vendor status;
+- use `binary_sensor...ignition_active` only as a low-level signal, not as the main on/off state.
 
-De reden daarvoor is dat Asmoke na een stop nog een oude `mode` zoals `QUICK` kan blijven rapporteren, terwijl de echte status al `idle` is. De integratie leidt `cook_active` daarom af uit de bevestigde runtime-status.
+The reason is that after a stop, Asmoke can keep reporting an old `mode` such as `QUICK`, while the real status is already `idle`. The integration therefore derives `cook_active` from the confirmed runtime status.
 
-## Bediening in versie 1
+## Current control surface
 
-Je kunt in deze eerste versie:
+In the current version you can:
 
-- temperatuur- en statusdata uitlezen;
-- zien of de brokerverbinding actief is;
-- zien of het device recent berichten heeft gestuurd;
-- zien of er echt een cook actief is via `Cook active`;
-- een cook starten in bevestigde `smoke`-, `quick`- of `roast`-modus;
-- `smoke` en `quick` bedienen via een climate-entity met een gedeelde doeltemperatuur;
-- een lopende cook stoppen;
-- een `Stop cook` button direct vanaf het device-scherm gebruiken;
-- een `Start quick cook` button gebruiken met vooraf ingestelde Quick-waarden;
-- de Quick target time apart instellen voor Quick-modus, zowel als preset in idle als live tijdens een actieve Quick-cook;
-- een raw action publiceren voor gecontroleerde experimenten.
+- read temperature and status data;
+- see whether the broker connection is active;
+- see whether the device has published messages recently;
+- see whether a cook is really active through `Cook active`;
+- start a cook in confirmed `smoke`, `quick`, or `roast` mode;
+- control `smoke` and `quick` through a climate entity with a shared target temperature;
+- stop a running cook;
+- use a `Stop cook` button directly from the device page or a dashboard;
+- use a `Start quick cook` button with the current Quick values;
+- set Quick target time separately for Quick mode, both as an idle preset and live during an active Quick cook;
+- publish a raw action for controlled experiments.
 
-Praktisch betekent dat:
+In practical terms:
 
-- er nog maar één gedeelde target temperature is voor `smoke` en `quick`;
-- je de gewenste cook-modus kiest via de climate preset `smoke` of `quick`;
-- `cook_active` de aanbevolen automationstatus is voor aan of uit;
-- `Stop cook` direct als press button beschikbaar is;
-- `Start quick cook` direct als press button beschikbaar is;
-- alleen Quick `target_time` nog als aparte number-entity ingesteld wordt;
-- de Quick number tijdens een actieve Quick-cook live de smoker-target time volgt en direct kan bijsturen;
-- je voor bevestigde acties niet altijd ruwe JSON hoeft te sturen;
-- je voor onbevestigde functies nog steeds `publish_raw_action` kunt gebruiken.
+- there is only one shared target temperature for `smoke` and `quick`;
+- you choose the desired cook mode through the climate preset `smoke` or `quick`;
+- `cook_active` is the recommended automation state for on or off;
+- `Stop cook` is available directly as a press button;
+- `Start quick cook` is available directly as a press button;
+- only Quick `target_time` remains as a separate number entity;
+- during an active Quick cook, the Quick number follows the smoker target time live and can update it directly;
+- for confirmed actions you do not always need to send raw JSON;
+- for unconfirmed functionality you can still use `publish_raw_action`.
 
-## Probe niet aangesloten
+## Disconnected probes
 
-Bij Asmoke lijkt de waarde `499` voor `probeATemp` of `probeBTemp` in de praktijk een sentinelwaarde te zijn voor een niet-aangesloten probe.
+On Asmoke, the value `499` for `probeATemp` or `probeBTemp` appears to be a sentinel value for a disconnected probe.
 
-In deze integration wordt `499` daarom behandeld als geen geldige temperatuurwaarde.
+In this integration, `499` is therefore treated as not being a valid temperature.
 
-Praktisch betekent dat:
+In practice this means:
 
-- een probe met waarde `499` wordt niet als echte temperatuur getoond;
-- de betreffende probe-entity wordt dan unavailable of leeg in plaats van `499` graden.
+- a probe with value `499` is not shown as a real temperature;
+- the corresponding probe entity becomes unavailable or empty instead of showing `499` degrees.
 
 ## Services
 
-De voorbeelden hieronder gaan uit van een automation of script in YAML.
+The examples below assume an automation or script in YAML.
 
-Als je maar een smoker in Home Assistant hebt, hoef je meestal geen `entry_id` of `device_id` mee te geven.
-Heb je meerdere Asmoke-smokers gekoppeld, voeg dan een van die twee velden toe zodat de action naar het juiste device gaat.
+If you only have one smoker in Home Assistant, you usually do not need to provide `entry_id` or `device_id`.
+If you have multiple Asmoke smokers connected, add one of those fields so the action goes to the correct device.
 
-Beschikbare services:
+Available services:
 
 1. `asmoke_cloud.set_smoke_target_temp`
 2. `asmoke_cloud.start_cook`
@@ -193,13 +193,13 @@ Beschikbare services:
 
 ### set_smoke_target_temp
 
-Gebruik deze service of de climate-entity om de smoke target temperature te wijzigen. In Home Assistant geef je hiervoor het veld `target_temp` mee; de integratie vertaalt dat intern naar het bevestigde vendorcommando.
+Use this service, or the climate entity, to change the smoke target temperature. In Home Assistant you pass the field `target_temp`; the integration maps that internally to the confirmed vendor command.
 
-Benodigd:
+Required:
 
 - `target_temp`
 
-Voorbeeld YAML:
+Example YAML:
 
 ```yaml
 action:
@@ -210,62 +210,62 @@ action:
 
 ### Climate entity
 
-De integratie maakt nu een climate-entity aan voor de pit-bediening.
+The integration now creates a climate entity for pit control.
 
-Daarin zitten:
+It includes:
 
-- één gedeelde target temperature voor `smoke` en `quick`;
-- een moduskiezer via climate preset modes `smoke` en `quick`;
-- target temperature-stappen van 10 graden, gelijk aan de appbediening;
-- `off` en `heat` als climate HVAC-modes.
+- one shared target temperature for `smoke` and `quick`;
+- mode selection through the climate preset modes `smoke` and `quick`;
+- target temperature steps of 10 degrees, matching the app behavior;
+- `off` and `heat` as climate HVAC modes.
 
-Praktisch gebruik:
+Practical usage:
 
-- kies preset `smoke` als je een gewone smoke-cook wilt starten;
-- kies preset `quick` als je een quick-cook wilt starten;
-- stel de temperatuur in via de climate target temperature;
-- zet daarna de climate op `heat` om de gekozen modus te starten;
-- zet de climate op `off` of gebruik `climate.turn_off` om een stop-commando te sturen;
-- de climate blijft ook echt `off` zodra de smoker `status: idle` terugrapporteert, ook als de vendor `mode` nog een oude waarde vasthoudt.
+- choose preset `smoke` to start a normal smoke cook;
+- choose preset `quick` to start a Quick cook;
+- set the temperature through the climate target temperature;
+- then set the climate to `heat` to start the selected mode;
+- set the climate to `off` or use `climate.turn_off` to send a stop command;
+- the climate also stays truly `off` once the smoker reports `status: idle`, even if the vendor `mode` still keeps an older value.
 
-Voorbeeld YAML voor Smoke via climate:
+Example YAML for Smoke through climate:
 
 ```yaml
 action:
   - service: climate.set_preset_mode
     target:
-      entity_id: climate.asmoke_pit_thermostat
+      entity_id: climate.asmoke_backyard_pit_thermostat
     data:
       preset_mode: smoke
   - service: climate.set_temperature
     target:
-      entity_id: climate.asmoke_pit_thermostat
+      entity_id: climate.asmoke_backyard_pit_thermostat
     data:
       temperature: 110
   - service: climate.set_hvac_mode
     target:
-      entity_id: climate.asmoke_pit_thermostat
+      entity_id: climate.asmoke_backyard_pit_thermostat
     data:
       hvac_mode: heat
 ```
 
 ### Quick button entities
 
-Voor Quick zijn nu ook entities beschikbaar:
+For Quick mode, the following entities are available:
 
-- een number-entity voor `Quick target time`;
-- een sensor voor de door de smoker gerapporteerde `Target time`;
-- een press button `Start quick cook`.
+- a number entity for `Quick target time`;
+- a sensor for the `Target time` reported by the smoker;
+- a `Start quick cook` press button.
 
-Je stelt eerst de climate target temperature en de Quick target time in en drukt daarna op de Quick-button. Die button publiceert vervolgens de bevestigde Quick-payload met die huidige waarden.
+First set the climate target temperature and the Quick target time, then press the Quick button. That button publishes the confirmed Quick payload with those current values.
 
-Als er al een Quick-cook loopt, dan werkt `number.quick_target_time` niet alleen meer als lokale preset:
+If a Quick cook is already running, `number.quick_target_time` no longer acts only as a local preset:
 
-- de number volgt dan de actuele device `target_time`;
-- een wijziging via `number.set_value` publiceert direct een live Quick-update naar de smoker;
-- de losse `sensor.target_time` blijft de ruwe device-telemetrie tonen.
+- the number follows the current device `target_time`;
+- a change through `number.set_value` publishes a live Quick update directly to the smoker;
+- the separate `sensor.target_time` keeps showing the raw device telemetry.
 
-Voorbeeld YAML om de Quick-button te gebruiken:
+Example YAML to use the Quick button:
 
 ```yaml
 action:
@@ -284,7 +284,7 @@ action:
       entity_id: button.asmoke_backyard_start_quick_cook
 ```
 
-Voorbeeld YAML om een actieve Quick-cook live te verlengen:
+Example YAML to extend an active Quick cook live:
 
 ```yaml
 action:
@@ -297,11 +297,11 @@ action:
 
 ### Stop button entity
 
-Naast de service is er nu ook een press button `Stop cook`. Die publiceert dezelfde bevestigde Stop-actie, maar is handiger voor direct gebruik vanaf het device-scherm of een dashboard.
+In addition to the service, there is now also a `Stop cook` press button. It publishes the same confirmed Stop action, but is more convenient for direct use from the device page or a dashboard.
 
-Als je liever volledig via climate werkt, kun je ook `climate.set_hvac_mode` met `off` gebruiken.
+If you prefer to work entirely through climate, you can also use `climate.set_hvac_mode` with `off`.
 
-Voorbeeld YAML om de Stop-button te gebruiken:
+Example YAML to use the Stop button:
 
 ```yaml
 action:
@@ -312,23 +312,23 @@ action:
 
 ### start_cook
 
-Gebruik deze service om een bevestigde cook-modus te starten.
+Use this service to start a confirmed cook mode.
 
-Bevestigde waarden voor `mode`:
+Confirmed values for `mode`:
 
-- `smoke`: vereist `target_temp`;
-- `quick`: vereist `target_temp` en `target_time`;
-- `roast`: vereist `target_temp`, `target_time`, `probe_temp`, `ingredient_category` en `k_value`.
+- `smoke`: requires `target_temp`;
+- `quick`: requires `target_temp` and `target_time`;
+- `roast`: requires `target_temp`, `target_time`, `probe_temp`, `ingredient_category`, and `k_value`.
 
-De integratie vertaalt dit naar de bevestigde vendorpayloads:
+The integration maps this to the confirmed vendor payloads:
 
 - `smoke` -> `{"type":"action","command":"Smoke","data":{"targetTemp":...}}`
 - `quick` -> `{"type":"action","command":"Quick","data":{"targetTemp":...,"targetTime":...}}`
 - `roast` -> `{"type":"action","command":"Roast","data":{"targetTemp":...,"targetTime":...,"probeTemp":...,"kValue":"...","ingredientCategory":"..."}}`
 
-De huidige Roast-ondersteuning blijft bewust strikt: de integratie exposeert alleen de exact bevestigde velden uit de capture en vult geen onbevestigde defaults in.
+The current Roast support intentionally stays strict: the integration only exposes the exact confirmed fields from the capture and does not fill in unconfirmed defaults.
 
-Voorbeeld YAML voor `smoke`:
+Example YAML for `smoke`:
 
 ```yaml
 action:
@@ -338,7 +338,7 @@ action:
       target_temp: 110
 ```
 
-Voorbeeld YAML voor `quick`:
+Example YAML for `quick`:
 
 ```yaml
 action:
@@ -349,7 +349,7 @@ action:
       target_time: 12
 ```
 
-Voorbeeld YAML voor `roast`:
+Example YAML for `roast`:
 
 ```yaml
 action:
@@ -365,14 +365,14 @@ action:
 
 ### stop_cook
 
-Gebruik deze service om een lopende cook te stoppen. De integratie publiceert hiervoor de bevestigde vendoractie `{"type":"action","command":"Stop"}`.
+Use this service to stop a running cook. The integration publishes the confirmed vendor action `{"type":"action","command":"Stop"}`.
 
-Benodigd:
+Required:
 
-- geen extra velden als je maar één smoker hebt;
-- anders `entry_id` of `device_id`.
+- no extra fields if you only have one smoker;
+- otherwise `entry_id` or `device_id`.
 
-Voorbeeld YAML:
+Example YAML:
 
 ```yaml
 action:
@@ -381,16 +381,16 @@ action:
 
 ### publish_raw_action
 
-Gebruik deze alleen als je weet welke payload je wilt sturen. Deze service verwacht ruwe vendor-JSON, bijvoorbeeld `{"targetTemp":110}` voor het bevestigde Smoke-commando. Deze service is bedoeld als gevorderde fallback en voor reverse-engineering van extra Asmoke-functies.
+Only use this if you know which payload you want to send. This service expects raw vendor JSON, for example `{"targetTemp":110}` for the confirmed Smoke command. It is intended as an advanced fallback and for reverse engineering additional Asmoke functions.
 
-In YAML kun je `payload` als object meegeven. In de Home Assistant service-UI is een JSON-string vaak het meest praktisch.
+In YAML you can pass `payload` as an object. In the Home Assistant service UI, a JSON string is often the most practical.
 
-Benodigd:
+Required:
 
 - `command`
-- optioneel `payload`
+- optional `payload`
 
-Voorbeeld YAML:
+Example YAML:
 
 ```yaml
 action:
@@ -401,7 +401,7 @@ action:
         targetTemp: 110
 ```
 
-Voorbeeld als JSON-string:
+Example as a JSON string:
 
 ```yaml
 action:
@@ -411,70 +411,70 @@ action:
       payload: '{"targetTemp":110}'
 ```
 
-## Entities voor bediening
+## Direct control entities
 
-Naast services maakt de integratie ook directe bedienings-entities aan:
+Besides services, the integration also creates direct control entities:
 
-- `climate.<naam>_pit_thermostat`
-- `number.<naam>_quick_target_time`
-- `button.<naam>_start_quick_cook`
-- `button.<naam>_stop_cook`
+- `climate.<name>_pit_thermostat`
+- `number.<name>_quick_target_time`
+- `button.<name>_start_quick_cook`
+- `button.<name>_stop_cook`
 
-De exacte entity IDs hangen af van je device name in Home Assistant. Controleer ze altijd even in Ontwikkelaarstools of op het device-scherm.
+The exact entity IDs depend on the device name in Home Assistant. Always verify them in Developer Tools or on the device page.
 
-## Automation-voorbeelden
+## Automation examples
 
-Voor complete voorbeelden met notificaties en YAML zie [automation-examples.md](automation-examples.md).
+For complete examples with notifications and YAML, see [automation-examples.md](automation-examples.md).
 
-## Wat je ziet als de BBQ uit staat
+## When the grill is off
 
-Als de BBQ uit staat:
+When the grill is off:
 
-- blijft de integration geladen;
-- blijft de brokerverbinding in principe kunnen bestaan;
-- kan `device online` uit staan;
-- kunnen temperatuur-entities unavailable zijn of oude waarden behouden tot nieuwe berichten binnenkomen.
+- the integration remains loaded;
+- the broker connection may still remain established;
+- `device online` can be off;
+- temperature entities can become unavailable or keep older values until new messages arrive.
 
-Dit is normaal gedrag in deze architectuur, omdat de integration push-updates verwacht van het device.
+This is normal behavior in this architecture, because the integration expects push updates from the device.
 
-## Problemen oplossen
+## Troubleshooting
 
-### Config flow faalt direct
+### The config flow fails immediately
 
-Controleer:
+Check:
 
 - broker host;
 - broker port;
 - username;
 - password;
-- of Home Assistant internettoegang heeft.
+- whether Home Assistant has internet access.
 
-### Geen temperatuurdata zichtbaar
+### No temperature data is visible
 
-Controleer:
+Check:
 
-- of de juiste `device_id` is gebruikt;
-- of de smoker aan staat;
-- of de smoker recent berichten heeft gepubliceerd;
-- of `broker connected` wel aan staat.
+- whether the correct `device_id` is in use;
+- whether the smoker is on;
+- whether the smoker has published messages recently;
+- whether `broker connected` is on.
 
-### Discovery vindt geen device
+### Discovery finds no device
 
-Controleer:
+Check:
 
-- of de brokercredentials kloppen;
-- of de BBQ aan staat of net via de app is gewekt;
-- of Home Assistant internettoegang heeft;
-- of er tijdens discovery echt een nieuw statusbericht van de smoker is verstuurd.
+- whether the broker credentials are correct;
+- whether the grill is on or has just been woken through the app;
+- whether Home Assistant has internet access;
+- whether a fresh status message was actually sent by the smoker during discovery.
 
-### Credentials zijn gewijzigd
+### Credentials changed
 
-De options flow in deze versie beheert alleen `offline_timeout`, `extra_topics` en `debug_logging`. Als brokercredentials zijn gewijzigd, voeg de integratie opnieuw toe met de nieuwe waarden. Gebruik de reauth-flow alleen als Home Assistant die expliciet aanbiedt.
+In this version, the options flow only manages `offline_timeout`, `extra_topics`, and `debug_logging`. If broker credentials changed, add the integration again with the new values. Only use the reauth flow if Home Assistant explicitly offers it.
 
-## Wat nu al werkt en wat nog niet
+## What already works and what does not yet
 
-Zie [first-version.md](first-version.md).
+See [first-version.md](first-version.md).
 
-## Firmwareversie
+## Firmware version
 
-In de tot nu toe bevestigde captures is nog geen duidelijk firmwareveld gezien. Als Asmoke later wel een herkenbaar firmwareveld in de statuspayload meestuurt, pakt de integratie dat automatisch op voor device info.
+In the captures confirmed so far, no clearly identifiable firmware field has been seen yet. If Asmoke later starts including a recognizable firmware field in the status payload, the integration will pick it up automatically for device info.

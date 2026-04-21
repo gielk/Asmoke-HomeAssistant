@@ -1,16 +1,16 @@
-# Home Assistant Architectuur
+# Home Assistant Architecture
 
-## Korte conclusie
+## Short conclusion
 
-Asmoke draait in deze repo als Home Assistant custom integration met een eigen verbinding naar de vendor MQTT-broker. Een add-on is niet nodig voor de normale runtime.
+Asmoke runs in this repository as a Home Assistant custom integration with its own connection to the vendor MQTT broker. A separate add-on is not required for normal runtime use.
 
-## Huidige distributievorm
+## Current distribution model
 
-- Home Assistant vorm: custom integration;
+- Home Assistant form: custom integration;
 - HACS type: `integration`;
-- domein: `asmoke_cloud`.
+- domain: `asmoke_cloud`.
 
-## Actuele repositorystructuur
+## Current repository structure
 
 ```text
 custom_components/
@@ -25,6 +25,8 @@ custom_components/
     sensor.py
     binary_sensor.py
     number.py
+    button.py
+    climate.py
     services.py
     services.yaml
     diagnostics.py
@@ -41,73 +43,81 @@ tests/
   components/
     asmoke_cloud/
       conftest.py
+      test_binary_sensor.py
+      test_button.py
+      test_climate.py
       test_config_flow.py
       test_diagnostics.py
       test_init.py
+      test_number.py
       test_sensor.py
       test_services.py
 ```
 
 ## Config flow
 
-De config flow biedt nu twee routes:
+The config flow currently offers two routes:
 
 1. `discover`
 2. `manual`
 
-Bij `discover` logt Home Assistant tijdelijk in op de broker en luistert kort op `device/status/+` om een `device_id` te vinden. Bij `manual` vult de gebruiker het `device_id` zelf in.
+For `discover`, Home Assistant temporarily logs in to the broker and listens on `device/status/+` to find a `device_id`. For `manual`, the user enters the `device_id` directly.
 
-Beide routes vragen in de huidige versie broker host, port, username, password en keepalive, tenzij die al lokaal zijn vooringevuld via local auth of environment variables.
+In the current version both routes ask for broker host, port, username, password, and keepalive, unless those values are already prefilled through local auth or environment variables.
 
-## Reauth en options
+## Reauth and options
 
-De integratie heeft een reauth-flow voor brokercredentials en een `OptionsFlowWithReload` voor:
+The integration has a reauth flow for broker credentials and an `OptionsFlowWithReload` for:
 
 - `offline_timeout`;
 - `extra_topics`;
 - `debug_logging`.
 
-De options flow beheert dus geen brokercredentials.
+The options flow does not manage broker credentials.
 
-## Runtime-ontwerp
+## Runtime design
 
-De runtime zit in `AsmokeMqttRuntime` en gebruikt een eigen `paho-mqtt` client. Die runtime:
+The runtime lives in `AsmokeMqttRuntime` and uses its own `paho-mqtt` client. That runtime:
 
-- valideert brokerconnectiviteit;
-- beheert reconnectgedrag;
-- verwerkt status-, temperatuur- en result-topics;
-- houdt gedeelde state bij voor entities en diagnostics;
-- blijft kunnen laden ook als de BBQ uit staat.
+- validates broker connectivity;
+- manages reconnect behavior;
+- processes status, temperature, result, and roast topics;
+- keeps shared state for entities and diagnostics;
+- can keep loading even when the grill is off.
 
-Voor discovery wordt tijdelijk een losse MQTT-client gebruikt die alleen zoekt naar een bruikbaar `device_id` en eventuele metadata zoals grill type of firmwareversie.
+For discovery, a temporary MQTT client is used only to find a usable `device_id` and any metadata such as grill type or firmware version.
 
-## Entities en services
+## Entities and services
 
-De actuele platforms zijn:
+The current entity platforms are:
 
 - sensors;
 - binary sensors;
-- number.
+- number;
+- button;
+- climate.
 
-Daarmee exposeert de integratie onder meer grill- en probetemperaturen, battery/roast/targetinformatie, brokerstatus, device-online status en een number entity voor smoke target temperature.
+The integration exposes grill and probe temperatures, battery/roast/target data, broker status, device online state, cook activity, Wi-Fi connected state, direct button controls, climate control, and Quick target time control.
 
-Beschikbare services:
+Available services:
 
 - `publish_raw_action`;
-- `set_smoke_target_temp`.
+- `set_smoke_target_temp`;
+- `start_cook`;
+- `stop_cook`.
 
 ## Diagnostics
 
-Diagnostics bevatten runtime- en payloadinformatie, maar redigeren gevoelige velden zoals username, password en client-id.
+Diagnostics include runtime and payload information, but redact sensitive values such as username, password, and client ID.
 
-## Security-grens
+## Security boundary
 
-Publieke repo-inhoud bevat geen live brokersecrets. Voor lokaal voorinvullen gebruikt de integratie:
+The public repository does not contain live broker secrets. For local prefilling, the integration supports:
 
 - `custom_components/asmoke_cloud/local_auth.json`;
-- `asmoke_cloud_local_auth.json` in de Home Assistant config-root;
-- environment variables zoals `ASMOKE_CLOUD_USERNAME` en `ASMOKE_CLOUD_PASSWORD`.
+- `asmoke_cloud_local_auth.json` in the Home Assistant config root;
+- environment variables such as `ASMOKE_CLOUD_USERNAME` and `ASMOKE_CLOUD_PASSWORD`.
 
-## Belangrijkste beperking van de huidige architectuur
+## Main limitation of the current architecture
 
-Onboarding is nu semi-automatisch: `device_id` discovery werkt, maar brokercredentials moeten nog steeds bekend zijn of lokaal worden vooringevuld. Er is geen bruikbare lokale LAN-integratie gevonden die dit volledig vervangt.
+Onboarding is currently semi-automatic: `device_id` discovery works, but broker credentials still need to be known or prefilled locally. No usable local LAN integration has been found that fully replaces this model.

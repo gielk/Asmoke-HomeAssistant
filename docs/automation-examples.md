@@ -1,13 +1,13 @@
-# Automation-voorbeelden
+# Automation Examples
 
-Deze voorbeelden zijn bijgewerkt voor de huidige entityset met:
+These examples are updated for the current entity set, with:
 
-- `binary_sensor...cook_active` als aanbevolen aan/uit-signaal;
-- `climate...pit_thermostat` voor smoke en quick;
-- `number...quick_target_time` die tijdens een actieve Quick-cook live mee kan sturen;
-- `sensor...target_time` als gerapporteerde device target time.
+- `binary_sensor...cook_active` as the recommended on/off signal;
+- `climate...pit_thermostat` for smoke and quick;
+- `number...quick_target_time`, which can publish live updates during an active Quick cook;
+- `sensor...target_time` as the reported device target time.
 
-Pas altijd eerst deze placeholders aan:
+Always replace these placeholders first:
 
 - `binary_sensor.asmoke_backyard_broker_connected`
 - `binary_sensor.asmoke_backyard_device_online`
@@ -21,35 +21,35 @@ Pas altijd eerst deze placeholders aan:
 - `sensor.asmoke_backyard_probe_a_temperature`
 - `sensor.asmoke_backyard_grill_temperature_1`
 - `sensor.asmoke_backyard_last_result_message`
-- `notify.mobile_app_jouw_telefoon`
+- `notify.mobile_app_your_phone`
 - `input_boolean.asmoke_stop_requested`
 - `input_boolean.asmoke_extend_quick_15`
 
-## 1. Notificatie als de smoker offline raakt
+## 1. Notification when the smoker goes offline
 
 ```yaml
 alias: Asmoke smoker offline
-description: Meld als de smoker 10 minuten geen cloud-updates meer heeft gestuurd.
+description: Notify when the smoker has not sent cloud updates for 10 minutes.
 trigger:
   - platform: state
     entity_id: binary_sensor.asmoke_backyard_device_online
     to: "off"
     for: "00:10:00"
 action:
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
       title: Asmoke offline
-      message: De smoker heeft al 10 minuten geen statusupdates meer gestuurd.
+      message: The smoker has not sent any status updates for 10 minutes.
 mode: single
 ```
 
-## 2. Notificatie als een cook start of stopt
+## 2. Notification when a cook starts or stops
 
-Gebruik hiervoor bewust `cook_active` en niet `sensor.mode`, omdat de vendor-mode na Stop nog sticky kan blijven.
+Use `cook_active` intentionally here instead of `sensor.mode`, because the vendor mode can remain sticky after Stop.
 
 ```yaml
-alias: Asmoke cook status veranderd
-description: Stuur een melding zodra een cook echt start of stopt.
+alias: Asmoke cook status changed
+description: Send a notification when a cook really starts or stops.
 trigger:
   - platform: state
     entity_id: binary_sensor.asmoke_backyard_cook_active
@@ -61,23 +61,23 @@ condition:
          and trigger.from_state is not none
          and trigger.from_state.state != trigger.to_state.state }}
 action:
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
       title: Asmoke cook status
       message: >-
         {% if trigger.to_state.state == 'on' %}
-          Er draait nu een cook. Modus: {{ states('sensor.asmoke_backyard_mode') }}.
+          A cook is now running. Mode: {{ states('sensor.asmoke_backyard_mode') }}.
         {% else %}
-          De cook is gestopt of klaar. Laatste modus: {{ states('sensor.asmoke_backyard_mode') }}.
+          The cook stopped or finished. Last mode: {{ states('sensor.asmoke_backyard_mode') }}.
         {% endif %}
 mode: queued
 ```
 
-## 3. Notificatie als probe A een kerntemperatuur haalt
+## 3. Notification when probe A reaches the target internal temperature
 
 ```yaml
-alias: Asmoke probe A target bereikt
-description: Meld alleen tijdens een actieve cook als probe A boven de doelwaarde komt.
+alias: Asmoke probe A target reached
+description: Notify only during an active cook when probe A rises above the target value.
 trigger:
   - platform: numeric_state
     entity_id: sensor.asmoke_backyard_probe_a_temperature
@@ -88,21 +88,21 @@ condition:
     entity_id: binary_sensor.asmoke_backyard_cook_active
     state: "on"
 action:
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke target gehaald
+      title: Asmoke target reached
       message: >-
-        Probe A is {{ states('sensor.asmoke_backyard_probe_a_temperature') }} C en dus boven 65 C gekomen.
+        Probe A is {{ states('sensor.asmoke_backyard_probe_a_temperature') }} C and has now gone above 65 C.
 mode: single
 ```
 
-Opmerking: omdat de integratie `499` al omzet naar geen geldige probe-waarde, geeft dit voorbeeld geen valse melding op een niet-aangesloten probe.
+Note: because the integration already converts `499` into no valid probe value, this example does not generate a false alert for a disconnected probe.
 
-## 4. Smoke cook starten via climate preset
+## 4. Start a smoke cook through the climate preset
 
 ```yaml
-alias: Asmoke smoke starten via climate
-description: Start een smoke-cook op een vast tijdstip via de climate-entity.
+alias: Asmoke start smoke through climate
+description: Start a smoke cook at a fixed time through the climate entity.
 trigger:
   - platform: time
     at: "17:30:00"
@@ -122,18 +122,18 @@ action:
       entity_id: climate.asmoke_backyard_pit_thermostat
     data:
       hvac_mode: heat
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke smoke gestart
-      message: Smoke cook is gestart op 110 C.
+      title: Asmoke smoke started
+      message: Smoke cook started at 110 C.
 mode: single
 ```
 
-## 5. Quick cook starten via climate plus button
+## 5. Start a Quick cook through climate plus button
 
 ```yaml
-alias: Asmoke quick 12 minuten
-description: Stel temperatuur en Quick target time in en start daarna Quick.
+alias: Asmoke quick 12 minutes
+description: Set temperature and Quick target time, then start Quick.
 trigger:
   - platform: time
     at: "18:00:00"
@@ -156,20 +156,20 @@ action:
   - service: button.press
     target:
       entity_id: button.asmoke_backyard_start_quick_cook
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke quick gestart
-      message: Quick cook is gestart op 160 C voor 12 minuten.
+      title: Asmoke quick started
+      message: Quick cook started at 160 C for 12 minutes.
 mode: single
 ```
 
-## 6. Actieve Quick-cook live verlengen met 15 minuten
+## 6. Extend an active Quick cook live by 15 minutes
 
-Dit voorbeeld gebruikt een helper zoals `input_boolean.asmoke_extend_quick_15`. Zodra je die helper aanzet, verhoogt Home Assistant live de Quick target time. Dankzij de huidige integratie publiceert `number.quick_target_time` dit direct naar de smoker zolang Quick actief is.
+This example uses a helper such as `input_boolean.asmoke_extend_quick_15`. As soon as you turn that helper on, Home Assistant increases the Quick target time live. With the current integration, `number.quick_target_time` publishes that update directly to the smoker while Quick is active.
 
 ```yaml
-alias: Asmoke verleng quick met 15 minuten
-description: Verhoog live de target time van een actieve Quick-cook.
+alias: Asmoke extend quick by 15 minutes
+description: Increase the target time live for an active Quick cook.
 trigger:
   - platform: state
     entity_id: input_boolean.asmoke_extend_quick_15
@@ -190,21 +190,21 @@ action:
       entity_id: number.asmoke_backyard_quick_target_time
     data:
       value: "{{ new_quick_time }}"
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke quick verlengd
-      message: Quick target time is nu {{ new_quick_time }} minuten.
+      title: Asmoke quick extended
+      message: Quick target time is now {{ new_quick_time }} minutes.
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.asmoke_extend_quick_15
 mode: single
 ```
 
-## 7. Stop-button gebruiken en daarna direct een notificatie sturen
+## 7. Use the Stop button and send a notification immediately afterwards
 
 ```yaml
-alias: Asmoke stop cook en meld het
-description: Gebruik een helper als dashboard-trigger voor Stop cook.
+alias: Asmoke stop cook and notify
+description: Use a helper as a dashboard trigger for Stop cook.
 trigger:
   - platform: state
     entity_id: input_boolean.asmoke_stop_requested
@@ -217,23 +217,23 @@ action:
   - service: button.press
     target:
       entity_id: button.asmoke_backyard_stop_cook
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke stop verstuurd
-      message: Het bevestigde Stop-commando is naar de smoker gestuurd.
+      title: Asmoke stop sent
+      message: The confirmed Stop command was sent to the smoker.
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.asmoke_stop_requested
 mode: single
 ```
 
-## 8. Notificatie op nieuwe result-message
+## 8. Notification on a new result message
 
-De sensor `last_result_message` is bruikbaar voor vendorbevestigingen zoals succesvol gestarte modes of andere resultaatmeldingen.
+The `last_result_message` sensor is useful for vendor confirmations such as successfully started modes or other result messages.
 
 ```yaml
 alias: Asmoke result message
-description: Stuur alleen een melding voor een echte nieuwe result-message.
+description: Send a notification only for a real new result message.
 trigger:
   - platform: state
     entity_id: sensor.asmoke_backyard_last_result_message
@@ -245,18 +245,18 @@ condition:
          and trigger.from_state is not none
          and trigger.from_state.state != trigger.to_state.state }}
 action:
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke melding
+      title: Asmoke message
       message: "{{ trigger.to_state.state }}"
 mode: queued
 ```
 
-## 9. Melding als de grill op de ingestelde smoke-temperatuur zit
+## 9. Notification when the grill reaches the configured smoke temperature
 
 ```yaml
-alias: Asmoke grill op doeltemperatuur
-description: Meld als grill temperature 1 de ingestelde climate target temperature bereikt.
+alias: Asmoke grill at target temperature
+description: Notify when grill temperature 1 reaches the configured climate target temperature.
 trigger:
   - platform: numeric_state
     entity_id: sensor.asmoke_backyard_grill_temperature_1
@@ -272,14 +272,14 @@ condition:
       {% set target = state_attr('climate.asmoke_backyard_pit_thermostat', 'temperature') | int(0) %}
       {{ target > 0 and grill >= target }}
 action:
-  - service: notify.mobile_app_jouw_telefoon
+  - service: notify.mobile_app_your_phone
     data:
-      title: Asmoke op temperatuur
+      title: Asmoke at temperature
       message: >-
-        Grill temperature 1 is {{ states('sensor.asmoke_backyard_grill_temperature_1') }} C en heeft de ingestelde target bereikt.
+        Grill temperature 1 is {{ states('sensor.asmoke_backyard_grill_temperature_1') }} C and has reached the configured target.
 mode: single
 ```
 
-## Praktische tip
+## Practical tip
 
-Begin met een eenvoudige notification-automation en controleer eerst in Ontwikkelaarstools of je entity IDs precies overeenkomen met jouw installatie. Vooral de climate-, button-, number- en binary sensor-namen hangen af van de naam die Home Assistant aan je device heeft gegeven.
+Start with a simple notification automation and first check in Developer Tools that your entity IDs exactly match your installation. The climate, button, number, and binary sensor names especially depend on the name Home Assistant assigned to your device.

@@ -1,86 +1,86 @@
-# Versie 1
+# Version 1 Overview
 
-## Wat werkt nu
+## Current capabilities
 
-Deze eerste versie werkt voor:
+The current integration supports:
 
-1. installeren als custom integration;
-2. toevoegen via Home Assistant config flow;
-3. semi-automatische discovery van het `device_id` via tijdelijke MQTT-listening;
-4. verbinding maken met de Asmoke cloud MQTT-broker;
-5. subscribe op bevestigde topics voor status, temperatures en result;
-6. entities aanmaken voor de belangrijkste telemetrie;
-7. diagnostics met redactie van gevoelige data;
-8. options flow voor debug logging, extra topics en offline timeout;
-9. bevestigde start-acties voor smoke, quick en roast cook;
-10. een bevestigde stop-actie voor een lopende cook;
-11. een raw action service voor gevorderd gebruik;
-12. blijven laden als de BBQ uit staat;
-13. een climate-entity met een gedeelde target temperature en `smoke`/`quick` modekeuze;
-14. een `Stop cook` button-entity en een `Start quick cook` button-entity;
-15. een `Cook active` binary sensor voor de nette vraag of er echt een cook loopt;
-16. Quick target time via een number-entity die idle als preset werkt en tijdens een actieve Quick-cook live kan bijsturen.
+1. installation as a custom integration;
+2. adding the integration through the Home Assistant config flow;
+3. semi-automatic discovery of the `device_id` through temporary MQTT listening;
+4. connecting to the Asmoke cloud MQTT broker;
+5. subscribing to confirmed status, temperatures, and result topics;
+6. creating entities for the main telemetry data;
+7. diagnostics with sensitive data redacted;
+8. an options flow for debug logging, extra topics, and offline timeout;
+9. confirmed start actions for smoke, quick, and roast cooks;
+10. a confirmed stop action for a running cook;
+11. a raw action service for advanced use;
+12. loading even when the grill is off;
+13. a climate entity with a shared target temperature and `smoke`/`quick` mode selection;
+14. a `Stop cook` button entity and a `Start quick cook` button entity;
+15. a `Cook active` binary sensor to answer whether a cook is really running;
+16. Quick target time through a number entity that works as an idle preset and can update live during an active Quick cook.
 
-## Entities in versie 1
+## Entity coverage
 
-Beschikbare entitytypes:
+Available entity types:
 
-- sensoren voor grill temperature 1 en 2;
-- sensoren voor probe A en probe B temperature;
-- sensor voor battery level;
-- sensor voor roast progress;
-- sensor voor target time;
-- sensor voor mode;
-- sensor voor last result message;
-- binary sensor voor broker connected;
-- binary sensor voor device online;
-- binary sensor voor cook active;
-- binary sensor voor Wi-Fi connected;
-- binary sensor voor ignition active;
-- climate entity voor pit thermostat;
-- number entity voor quick target time;
-- button entity voor stop cook;
-- button entity voor start quick cook.
+- sensors for grill temperature 1 and 2;
+- sensors for probe A and probe B temperature;
+- a battery level sensor;
+- a roast progress sensor;
+- a target time sensor;
+- a mode sensor;
+- a last result message sensor;
+- a broker connected binary sensor;
+- a device online binary sensor;
+- a cook active binary sensor;
+- a Wi-Fi connected binary sensor;
+- an ignition active binary sensor;
+- a pit thermostat climate entity;
+- a Quick target time number entity;
+- a Stop cook button entity;
+- a Start quick cook button entity.
 
-## Bevestigde schrijfroute in versie 1
+## Confirmed write paths
 
-Bevestigd en ingebouwd:
+Confirmed and implemented:
 
-- smoke en quick via een gedeelde climate target temperature;
-- smoke en quick modekeuze via climate preset modes;
-- quick target time via een aparte number-entity;
-- live Quick target time updates via diezelfde number-entity tijdens een actieve Quick-cook;
-- smoke target temperature via `asmoke_cloud.set_smoke_target_temp`.
-- cook start via `asmoke_cloud.start_cook` met bevestigde `smoke`, `quick` en `roast` modi;
-- cook stop via `asmoke_cloud.stop_cook`.
-- smoke start via de climate-entity in `smoke` preset;
-- quick start via de climate-entity in `quick` preset;
-- stop cook via een press button-entity;
-- quick start via een press button-entity die de Quick number-waarden gebruikt.
+- smoke and quick through a shared climate target temperature;
+- smoke and quick mode selection through climate preset modes;
+- Quick target time through a dedicated number entity;
+- live Quick target time updates through that same number entity during an active Quick cook;
+- smoke target temperature through `asmoke_cloud.set_smoke_target_temp`;
+- cook start through `asmoke_cloud.start_cook` with confirmed `smoke`, `quick`, and `roast` modes;
+- cook stop through `asmoke_cloud.stop_cook`;
+- smoke start through the climate entity in the `smoke` preset;
+- quick start through the climate entity in the `quick` preset;
+- stop cook through a press button entity;
+- quick start through a press button entity that uses the current Quick number values.
 
-## Bekende datainterpretaties in versie 1
+## Known data interpretations
 
-- `probeATemp = 499` wordt behandeld als probe niet aangesloten;
-- `probeBTemp = 499` wordt behandeld als probe niet aangesloten.
-- `status: idle` is de autoritatieve off-state, ook als `mode` nog een oudere waarde zoals `QUICK` bevat;
-- `wifiStatus` wordt op dit moment behandeld als een verbonden/niet-verbonden vlag en niet als bruikbare Wi-Fi-signaalsterkte;
-- `binary_sensor.cook_active` is daarom het aanbevolen automation- en dashboardsignaal voor aan of uit.
+- `probeATemp = 499` is treated as probe disconnected;
+- `probeBTemp = 499` is treated as probe disconnected;
+- `status: idle` is the authoritative off state even if `mode` still contains an older value such as `QUICK`;
+- `wifiStatus` is currently treated as a connected/disconnected flag and not as usable Wi-Fi signal strength;
+- `binary_sensor.cook_active` is therefore the recommended automation and dashboard signal for on/off.
 
-## Wat nog beperkt is
+## Current limitations
 
-Nog niet volledig uitgewerkt in versie 1:
+Not yet fully implemented in version 1:
 
-1. volledig hands-off onboarding zonder brokercredentials;
-2. brede ondersteuning voor alle Asmoke-modi en commando's buiten `smoke`, `quick`, `roast` en `stop`;
-3. volledige mapping van alle statusvelden;
-4. bevestigde firmwareversie-uitlezing;
-5. firmware-updates;
-6. UI-polish en uitgebreide eindgebruikersdiagnostiek;
-7. HACS default store opname.
+1. fully hands-off onboarding without broker credentials;
+2. broad support for all Asmoke modes and commands beyond `smoke`, `quick`, `roast`, and `stop`;
+3. full mapping of all status fields;
+4. confirmed firmware version detection;
+5. firmware updates;
+6. UI polish and broader end-user diagnostics;
+7. inclusion in the HACS default store.
 
-## Belangrijke grenzen
+## Important boundaries
 
-1. Deze integration gebruikt cloud MQTT, geen lokale LAN-API.
-2. De brokercredentials zijn gevoelig en horen niet in een publieke repo.
-3. Als de BBQ uit staat, blijft de integration wel bestaan maar komen er geen nieuwe push-updates binnen.
-4. `publish_raw_action` is krachtig maar ook risicovoller dan de bevestigde standaardacties.
+1. This integration uses cloud MQTT, not a local LAN API.
+2. Broker credentials are sensitive and do not belong in a public repository.
+3. If the grill is off, the integration remains loaded but no new push updates arrive.
+4. `publish_raw_action` is powerful, but also riskier than the confirmed standard actions.

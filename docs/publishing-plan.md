@@ -1,54 +1,54 @@
-# HACS En Publicatieplan
+# HACS and Publishing Plan
 
 ## Status
 
-Deze repository is inmiddels een publiceerbare HACS `integration` repository. De integratie staat onder `custom_components/asmoke_cloud`, heeft een config flow, tests, een `hacs.json`, semver-versies en GitHub Releases.
+This repository is now a publishable HACS `integration` repository. The integration lives under `custom_components/asmoke_cloud`, has a config flow, tests, a `hacs.json`, semantic versions, and GitHub Releases.
 
-## Huidige publicatievorm
+## Current publishing model
 
-- distributievorm: Home Assistant custom integration;
+- distribution model: Home Assistant custom integration;
 - HACS type: `integration`;
-- repositorystatus: publieke GitHub-repo met semver GitHub Releases;
-- actuele installatieroute: custom repository in HACS.
+- repository status: public GitHub repository with semantic version GitHub Releases;
+- current installation route: custom repository in HACS.
 
-De default branch is in HACS verborgen, zodat gebruikers een named release installeren in plaats van een commit-hash.
+The default branch is hidden in HACS so users install a named release instead of a commit hash.
 
-## Wat HACS hier nu gebruikt
+## What HACS uses here today
 
-Voor deze repo zijn de relevante bronnen:
+For this repository, the relevant sources are:
 
-- `custom_components/asmoke_cloud/manifest.json` voor de integratieversie;
-- `hacs.json` voor HACS metadata;
-- GitHub Releases voor zichtbare versienummers in HACS;
-- `README.md` en `docs/user-guide.md` voor installatie- en gebruiksinstructies.
+- `custom_components/asmoke_cloud/manifest.json` for the integration version;
+- `hacs.json` for HACS metadata;
+- GitHub Releases for visible version numbers in HACS;
+- `README.md` and `docs/user-guide.md` for installation and usage instructions.
 
-Alleen tags zijn hiervoor niet genoeg; HACS kijkt naar gepubliceerde GitHub Releases.
+Tags alone are not enough here; HACS looks at published GitHub Releases.
 
-## Releasechecklist
+## Release checklist
 
-Gebruik voor iedere nieuwe release deze volgorde:
+Use this order for every new release:
 
-1. Werk code en documentatie bij.
-2. Draai `pytest tests/components/asmoke_cloud -q`.
-3. Werk `custom_components/asmoke_cloud/manifest.json` bij naar de nieuwe semver-versie.
-4. Voeg een nieuwe Engelstalige entry toe aan `CHANGELOG.md`.
-5. Schrijf changelogregels vanuit gebruikersimpact, niet vanuit interne commitdetails.
-6. Commit de releasevoorbereiding.
-7. Maak en push een git-tag met dezelfde versie, bijvoorbeeld `v0.3.3`.
-8. Maak daarna een GitHub Release voor die tag.
+1. Update code and documentation.
+2. Run `pytest tests/components/asmoke_cloud -q`.
+3. Update `custom_components/asmoke_cloud/manifest.json` to the new semantic version.
+4. Add a new English entry to `CHANGELOG.md`.
+5. Write changelog entries from user impact, not from internal commit details.
+6. Commit the release preparation.
+7. Create and push a git tag with the same version, for example `v0.4.2`.
+8. Create a GitHub Release for that tag.
 
-## Huidige validatie
+## Current validation
 
-De repo heeft op dit moment:
+The repository currently has:
 
-- componenttests via `pytest-homeassistant-custom-component`;
-- een GitHub Actions workflow die `pytest` draait;
-- documentatie voor onboarding, local auth, troubleshooting en releasegeschiedenis.
+- component tests through `pytest-homeassistant-custom-component`;
+- a GitHub Actions workflow that runs `pytest`;
+- documentation for onboarding, local auth, troubleshooting, and release history.
 
-## Logische vervolgstappen
+## Logical next steps
 
-Voor latere iteraties zijn dit de meest logische verbeteringen:
+For later iterations, these are the most logical improvements:
 
-- `hassfest` of extra linting toevoegen aan CI;
-- releaseautomatisering toevoegen via GitHub Actions;
-- pas daarna bekijken of opname in de HACS default store zinvol is.
+- add `hassfest` or extra linting to CI;
+- add release automation through GitHub Actions;
+- only after that, evaluate whether inclusion in the HACS default store makes sense.

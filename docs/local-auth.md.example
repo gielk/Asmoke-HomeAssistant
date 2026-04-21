@@ -1,6 +1,6 @@
-# Lokale Auth Notities
+# Local Auth Notes
 
-Kopieer dit bestand lokaal naar `docs/local-auth.md`. Dat bestand staat in `.gitignore` en hoort niet in een publieke repo.
+Copy this file locally to `docs/local-auth.md`. That file is in `.gitignore` and does not belong in a public repository.
 
 ## Broker
 
@@ -8,7 +8,7 @@ Kopieer dit bestand lokaal naar `docs/local-auth.md`. Dat bestand staat in `.git
 - port: `<broker_port>`
 - protocol: `MQTT 3.1.1`
 
-## App-auth
+## App auth
 
 - username: `<username>`
 - password: `<password>`
@@ -16,25 +16,25 @@ Kopieer dit bestand lokaal naar `docs/local-auth.md`. Dat bestand staat in `.git
 - will topic: `<will_topic>`
 - will payload: `<will_payload>`
 
-## Client-id notities
+## Client ID notes
 
-- captured app client-id voorbeeld: `<captured_client_id>`
-- aanbevolen Home Assistant patroon: `ha_asmoke_<device_id>` of `ha_asmoke_<timestamp>`
+- captured app client ID example: `<captured_client_id>`
+- recommended Home Assistant pattern: `ha_asmoke_<device_id>` or `ha_asmoke_<timestamp>`
 
-## Device-notities
+## Device notes
 
-- primary device id: `<device_id>`
+- primary device ID: `<device_id>`
 
-## Topicpatronen
+## Topic patterns
 
 - status: `device/status/<device_id>`
 - temperatures: `device/temperatures/<device_id>`
 - result: `device/result/<device_id>`
 - commands: `asmoke/action/<device_id>`
 
-## Bevestigde payloadvoorbeelden
+## Confirmed payload examples
 
-De command payload hieronder is het direct op de broker waargenomen vendorformaat. De Home Assistant service `set_smoke_target_temp` gebruikt in de UI het veld `target_temp`, maar publiceert intern dit vendorformaat.
+The command payload below is the vendor format observed directly on the broker. The Home Assistant service `set_smoke_target_temp` uses the field `target_temp` in the UI, but publishes this vendor format internally.
 
 ### Command payload
 
@@ -54,8 +54,8 @@ De command payload hieronder is het direct op de broker waargenomen vendorformaa
 {"grillTemp1":135,"grillTemp2":159,"probeATemp":499,"probeBTemp":499}
 ```
 
-## Lokale validatie
+## Local validation
 
-- directe broker connect getest: `<yes_or_no>`
-- read-only subscribe getest: `<yes_or_no>`
-- laatste validatiedatum: `<yyyy-mm-dd>`
+- direct broker connection tested: `<yes_or_no>`
+- read-only subscribe tested: `<yes_or_no>`
+- last validation date: `<yyyy-mm-dd>`

@@ -1,28 +1,28 @@
-# Dashboard-voorbeeld
+# Dashboard Example
 
-Dit document hoort bij de actuele entityset van de Asmoke-integratie en gebruikt:
+This document matches the current Asmoke entity set and uses:
 
-- de climate-entity voor smoke en quick;
-- `number.quick_target_time` als Quick-invoer;
-- `binary_sensor.cook_active` als nette cook-status;
-- de huidige button-entities voor `Start quick cook` en `Stop cook`.
+- the climate entity for smoke and quick;
+- `number.quick_target_time` as the Quick input;
+- `binary_sensor.cook_active` as the clean cook status;
+- the current `Start quick cook` and `Stop cook` button entities.
 
-## Gebruik
+## Usage
 
-1. Kopieer de YAML uit [docs/dashboard-example.yaml](docs/dashboard-example.yaml).
-2. Vervang overal de slug `asmoke_backyard` door de entity-prefix van jouw device.
-3. Plak de inhoud in een YAML-dashboard of neem de view op onder `views:` in je bestaande Lovelace-config.
+1. Copy the YAML from [docs/dashboard-example.yaml](docs/dashboard-example.yaml).
+2. Replace every instance of the `asmoke_backyard` slug with the entity prefix of your device.
+3. Paste the content into a YAML dashboard or include the view under `views:` in your existing Lovelace configuration.
 
-## Wat dit dashboard laat zien
+## What this dashboard shows
 
-- een centrale pit-bediening via de climate-kaart;
-- een aparte Quick target time bediening;
-- snelle start- en stopknoppen;
-- een statusblok voor broker, device en cook active;
-- gauges voor grill- en probe-temperaturen;
-- een compacte telemetriekaart;
-- een history graph voor de belangrijkste temperaturen.
+- central pit control through the climate card;
+- a dedicated Quick target time control;
+- quick start and stop buttons;
+- a status block for broker, device, and cook activity;
+- gauges for grill and probe temperatures;
+- a compact live telemetry card;
+- a history graph for the main temperatures.
 
-## Belangrijke noot
+## Important note
 
-Gebruik in dashboards en automations bij voorkeur `binary_sensor...cook_active` voor de vraag of de smoker echt aan of uit is. De losse `sensor...mode` blijft handig als vendor-informatie, maar kan na een stop nog even een oude mode laten zien.
+For dashboards and automations, prefer `binary_sensor...cook_active` when the question is whether the smoker is actually on or off. The separate `sensor...mode` is still useful as vendor information, but it can continue showing an old mode for a short time after Stop.

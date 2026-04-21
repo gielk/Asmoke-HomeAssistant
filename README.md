@@ -4,82 +4,75 @@
 	<img src="https://cdn.shopify.com/s/files/1/0288/2060/2954/files/logo_final_43448c3c-dfd2-4921-8526-ca91ac15a6f0.png?height=628&pad_color=ffffff&v=1646132983&width=1200" alt="Asmoke logo" width="320">
 </p>
 
-Home Assistant custom integration voor Asmoke smokers via de Asmoke cloud MQTT-broker.
+Home Assistant custom integration for Asmoke smokers over the Asmoke cloud MQTT broker.
 
-Minimaal ondersteunde Home Assistant versie: `2025.1.0`.
+Minimum supported Home Assistant version: `2025.1.0`.
 
-## Wat dit is
+## Overview
 
-Deze repository bevat een werkende eerste versie van een custom Home Assistant integration.
+This repository provides a Home Assistant custom integration that connects directly to the Asmoke cloud MQTT broker.
 
-De integration:
+It can:
 
-- maakt een config flow aan in Home Assistant;
-- verbindt rechtstreeks met de Asmoke MQTT-broker;
-- kan het `device_id` automatisch ontdekken via een tijdelijke MQTT discovery-stap;
-- leest temperatuur-, status- en result-berichten;
-- maakt entities aan in Home Assistant;
-- ondersteunt bevestigde write-acties voor smoke, quick, roast en stop-cook bediening;
-- maakt een climate-entity aan met een gedeelde target temperature en `smoke`/`quick` modekeuze, plus een Quick target time number-entity die tijdens een actieve Quick-cook live mee kan sturen;
-- houdt daarnaast een `Stop cook` button-entity en een `Start quick cook` button-entity beschikbaar;
-- exposeert een `Cook active` binary sensor als nette aan/uit-status voor dashboards en automations;
-- blijft laden als de BBQ uit staat.
+- add the smoker through a Home Assistant config flow;
+- discover the `device_id` automatically through a temporary MQTT discovery step;
+- read temperature, status, and result messages from the broker;
+- expose Home Assistant entities for telemetry, controls, and runtime state;
+- publish confirmed commands for smoke, quick, roast, and stop cook control;
+- keep loading even when the grill is powered off.
 
-## Snelle start
+The current integration also includes a pit climate entity, Quick target time control, direct start and stop buttons, and derived runtime sensors such as `Cook active`.
 
-1. Voeg deze repository toe aan HACS als custom repository van type `integration`.
-2. Installeer `Asmoke Cloud` via HACS.
-3. Herstart Home Assistant.
-4. Ga naar `Instellingen -> Apparaten en diensten -> Integratie toevoegen`.
-5. Kies `Asmoke Cloud`.
-6. Kies `Discover Asmoke device` of `Enter device ID manually`.
-7. Bij discovery: zet de BBQ aan of open de Asmoke app zodat Home Assistant tijdelijk een statusbericht kan opvangen.
-8. Rond de config flow af.
+## Quick start
 
-Opmerking: host, poort en keepalive worden al met de bekende clouddefaults ingevuld. Deze repository commit geen vendor-shared MQTT credentials; als je die lokaal beschikbaar maakt via `local_auth.json` of environment variables, hoeven gebruikers in de praktijk meestal alleen nog een naam te kiezen en discovery te starten.
+1. Add this repository to HACS as a custom repository of type `integration`.
+2. Install `Asmoke Cloud` through HACS.
+3. Restart Home Assistant.
+4. Go to `Settings -> Devices & Services -> Add Integration`.
+5. Choose `Asmoke Cloud`.
+6. Choose `Discover Asmoke device` or `Enter device ID manually`.
+7. For discovery, power on the grill or open the Asmoke app so Home Assistant can observe a fresh status message.
+8. Complete the config flow.
 
-## Installatie en gebruik
+Note: host, port, and keepalive are prefilled with the known cloud defaults. This repository does not include vendor-shared MQTT credentials. If you make credentials available locally through `local_auth.json` or environment variables, setup usually only requires choosing a name and starting discovery.
 
-De volledige handleiding staat in [docs/user-guide.md](docs/user-guide.md).
+## Documentation
 
-Voor een kopieerbaar Lovelace-dashboard in YAML zie [docs/dashboard-example.md](docs/dashboard-example.md).
-
-Voor automation-, script- en notificatievoorbeelden met YAML zie [docs/automation-examples.md](docs/automation-examples.md).
-
-## Wat werkt in versie 1
-
-Het actuele overzicht staat in [docs/first-version.md](docs/first-version.md).
+- Full setup and usage guide: [docs/user-guide.md](docs/user-guide.md)
+- Copyable Lovelace dashboard example: [docs/dashboard-example.md](docs/dashboard-example.md)
+- Automation, script, and notification examples: [docs/automation-examples.md](docs/automation-examples.md)
+- Current feature scope: [docs/first-version.md](docs/first-version.md)
 
 ## Releases
 
-Deze repository gebruikt semver-releases voor HACS. De laatste stabiele release is `v0.4.2`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`.
 
-De main-branch kan al nieuwe, nog niet gereleasete integratiefuncties bevatten. Kijk daarvoor naar de bovenste sectie in `CHANGELOG.md`.
+The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 
-Het overzicht van functionele releases staat in [CHANGELOG.md](CHANGELOG.md).
+Release history is available in [CHANGELOG.md](CHANGELOG.md).
 
-## Belangrijkste bestanden
+## Repository guide
 
-- Integratiecode: [custom_components/asmoke_cloud](custom_components/asmoke_cloud)
+- Integration code: [custom_components/asmoke_cloud](custom_components/asmoke_cloud)
 - Tests: [tests/components/asmoke_cloud](tests/components/asmoke_cloud)
-- Onderzoekscontext: [docs/research-summary.md](docs/research-summary.md)
-- Architectuurkeuzes: [docs/integration-architecture.md](docs/integration-architecture.md)
+- Research summary: [docs/research-summary.md](docs/research-summary.md)
+- Architecture notes: [docs/integration-architecture.md](docs/integration-architecture.md)
 
-## Lokale auth-defaults
+## Local auth defaults
 
-Voor lokaal gebruik kun je brokergegevens laten voorinvullen via een lokaal bestand of environment variables. Gebruik hiervoor [custom_components/asmoke_cloud/local_auth.json.example](custom_components/asmoke_cloud/local_auth.json.example).
+For local use you can prefill broker credentials through a local file or environment variables. Use [custom_components/asmoke_cloud/local_auth.json.example](custom_components/asmoke_cloud/local_auth.json.example).
 
-Ondersteunde routes:
+Supported locations:
 
 1. `custom_components/asmoke_cloud/local_auth.json`
-2. `asmoke_cloud_local_auth.json` in de Home Assistant config-root
-3. environment variables zoals `ASMOKE_CLOUD_USERNAME` en `ASMOKE_CLOUD_PASSWORD`
+2. `asmoke_cloud_local_auth.json` in the Home Assistant config root
+3. Environment variables such as `ASMOKE_CLOUD_USERNAME` and `ASMOKE_CLOUD_PASSWORD`
 
-Deze lokale bestanden horen niet in Git.
+These local files do not belong in Git.
 
 ## Tests
 
-De componenttests draaien lokaal met:
+Run the component test suite locally with:
 
 ```bash
 python -m pytest tests/components/asmoke_cloud -q
