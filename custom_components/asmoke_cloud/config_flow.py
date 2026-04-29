@@ -43,6 +43,18 @@ def _string_default(value: Any, fallback: str = "") -> str:
 class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
+    def _local_auth_status_text(self) -> str:
+        if has_local_auth_defaults(self.hass):
+            return (
+                "present on this Home Assistant instance; broker fields can be "
+                "prefilled automatically"
+            )
+
+        return (
+            "not present yet on this Home Assistant instance; broker fields will "
+            "not be prefilled automatically"
+        )
+
     _reauth_entry: ConfigEntry | None = None
 
     @staticmethod
@@ -56,9 +68,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({}),
-            description_placeholders={
-                "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
-            },
+            description_placeholders={"local_auth": self._local_auth_status_text()},
         )
 
     async def async_step_setup_method(
@@ -98,9 +108,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discover",
             data_schema=self._discover_schema(defaults),
             errors=errors,
-            description_placeholders={
-                "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
-            },
+            description_placeholders={"local_auth": self._local_auth_status_text()},
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -126,9 +134,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual",
             data_schema=self._manual_schema(defaults),
             errors=errors,
-            description_placeholders={
-                "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
-            },
+            description_placeholders={"local_auth": self._local_auth_status_text()},
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

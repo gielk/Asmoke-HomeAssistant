@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4-beta.2 - 2026-04-29
+
+- Added explicit Home Assistant entity icon translations for the custom buttons, time controls, and status sensors, and locked in the local HACS/Home Assistant brand assets with metadata tests.
+- Made the config-flow local auth status wording clearer so missing local defaults are described explicitly instead of showing a raw yes/no style indicator.
+
 ## v0.4.4-beta.1 - 2026-04-29
 
 - Reworked the initial config flow so onboarding starts with a clearer prerequisites step that explains broker credentials are not in the public repository and gives better guidance for auto discovery.

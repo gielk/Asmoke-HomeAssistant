@@ -46,7 +46,7 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.1`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.2`.
 
 The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 

@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "button": {
+      "start_quick_cook": {
+        "default": "mdi:play-circle-outline"
+      },
+      "stop_cook": {
+        "default": "mdi:stop-circle-outline"
+      }
+    },
+    "climate": {
+      "pit_controller": {
+        "default": "mdi:grill",
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:grill",
+            "state": {
+              "smoke": "mdi:smoke",
+              "quick": "mdi:lightning-bolt"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "roast_progress": {
+        "default": "mdi:chart-donut"
+      },
+      "target_time": {
+        "default": "mdi:timer-outline"
+      },
+      "mode": {
+        "default": "mdi:grill"
+      },
+      "last_result_message": {
+        "default": "mdi:message-text-outline"
+      }
+    },
+    "number": {
+      "quick_target_time": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

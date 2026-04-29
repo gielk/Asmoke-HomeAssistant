@@ -29,6 +29,24 @@ async def test_user_flow_shows_intro_then_setup_menu(hass, bypass_runtime_start)
     assert result["step_id"] == "setup_method"
 
 
+async def test_user_flow_shows_clear_missing_local_auth_status(
+    hass, bypass_runtime_start
+) -> None:
+    with patch(
+        "custom_components.asmoke_cloud.config_flow.has_local_auth_defaults",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["description_placeholders"]["local_auth"] == (
+        "not present yet on this Home Assistant instance; broker fields will not "
+        "be prefilled automatically"
+    )
+
+
 def test_setup_method_menu_option_translations_exist() -> None:
     translation_path = (
         Path(__file__).resolve().parents[3]

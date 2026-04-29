@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to Asmoke Cloud",
-        "description": "Before continuing, note that the MQTT username and password are intentionally not stored in the public repository. If those values are not already prefilled locally, contact the maintainer directly for setup help instead of searching the repo. Local auth detected: {local_auth}\n\nAuto discovery only learns the device ID after Home Assistant can log in to the broker. For the best chance of discovery, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes a fresh status message. Click Next to choose a setup method."
+        "description": "Before continuing, note that the MQTT username and password are intentionally not stored in the public repository. If those values are not already prefilled locally, contact the maintainer directly for setup help instead of searching the repo. Local auth status: {local_auth}\n\nAuto discovery only learns the device ID after Home Assistant can log in to the broker. For the best chance of discovery, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes a fresh status message. Click Next to choose a setup method."
       },
       "setup_method": {
         "title": "Choose setup method",
@@ -16,7 +16,7 @@
       },
       "discover": {
         "title": "Discover Asmoke device",
-        "description": "Home Assistant will temporarily listen for Asmoke status messages to learn the device ID after logging in to the MQTT broker. This step still requires working broker credentials, and those credentials are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help.\n\nBefore continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes a fresh status message. If local auth defaults are present, the broker fields are prefilled automatically. Local auth detected: {local_auth}",
+        "description": "Home Assistant will temporarily listen for Asmoke status messages to learn the device ID after logging in to the MQTT broker. This step still requires working broker credentials, and those credentials are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help.\n\nBefore continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes a fresh status message. If local auth defaults are present, the broker fields are prefilled automatically. Local auth status: {local_auth}",
         "data": {
           "name": "Display name",
           "host": "MQTT host",
@@ -28,7 +28,7 @@
       },
       "manual": {
         "title": "Enter device ID manually",
-        "description": "Enter your Asmoke device ID together with working MQTT broker credentials. The broker username and password are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help. If local auth defaults are present, the fields are prefilled automatically. Local auth detected: {local_auth}",
+        "description": "Enter your Asmoke device ID together with working MQTT broker credentials. The broker username and password are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help. If local auth defaults are present, the fields are prefilled automatically. Local auth status: {local_auth}",
         "data": {
           "device_id": "Asmoke device ID",
           "name": "Display name",
