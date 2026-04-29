@@ -5,13 +5,38 @@ They are designed to feel close to current Home Assistant tile dashboards:
 rounded tiles, clear status chips, BBQ-inspired history visuals, light and dark
 theme support, and no extra frontend dependency.
 
+![Asmoke dashboard cards preview](images/asmoke-dashboard-cards-preview.png)
+
+The screenshot uses sample values, but it shows the intended layout: one live
+control card, one temperature history card, and one cook session card.
+
+## Quick start
+
+For a single configured Asmoke smoker, start with the card picker or this YAML:
+
+```yaml
+type: custom:asmoke-smoker-card
+```
+
+Add the optional history cards below it:
+
+```yaml
+- type: custom:asmoke-smoker-history-card
+  hours_to_show: 6
+
+- type: custom:asmoke-smoker-session-card
+  hours_to_show: 24
+```
+
+You only need to configure `device_id`, `climate`, or individual entities when
+Home Assistant cannot infer the smoker or when you have multiple Asmoke smokers.
+
 ## Cards
 
 ### Asmoke Smoker Card
 
 ```yaml
 type: custom:asmoke-smoker-card
-climate: climate.asmoke_backyard_pit_thermostat
 ```
 
 Shows live pit control, Quick target time, start/stop buttons, grill and probe
@@ -21,7 +46,6 @@ temperature tiles, broker/device/Wi-Fi status, battery, and last result.
 
 ```yaml
 type: custom:asmoke-smoker-history-card
-climate: climate.asmoke_backyard_pit_thermostat
 hours_to_show: 6
 ```
 
@@ -33,13 +57,27 @@ manual refresh chip.
 
 ```yaml
 type: custom:asmoke-smoker-session-card
-climate: climate.asmoke_backyard_pit_thermostat
 hours_to_show: 24
 ```
 
 Shows historical cook runtime from `binary_sensor...cook_active`, including a
 timeline, total runtime, cook count, longest cook, current/idle state, and the
 latest sessions.
+
+## How entity selection works
+
+The cards try to make the dashboard setup as simple as possible.
+
+Selection order:
+
+1. If you set explicit entity overrides, those always win.
+2. If you set `device_id`, the cards use entities from that Home Assistant device.
+3. If you set `climate`, the cards use the climate entity and then resolve related entities from the same Home Assistant device.
+4. If there is exactly one Asmoke pit thermostat, the cards select it automatically.
+5. If device registry data is unavailable, the cards fall back to the entity prefix.
+
+This means renamed entities should keep working as long as Home Assistant still
+exposes them on the same device.
 
 ## Loading the cards
 
@@ -70,23 +108,46 @@ type: module
 
 ```yaml
 - type: custom:asmoke-smoker-card
-  climate: climate.asmoke_backyard_pit_thermostat
 
 - type: custom:asmoke-smoker-history-card
-  climate: climate.asmoke_backyard_pit_thermostat
   hours_to_show: 6
 
 - type: custom:asmoke-smoker-session-card
-  climate: climate.asmoke_backyard_pit_thermostat
   hours_to_show: 24
 ```
 
-In most installs this is enough. The card derives the related Asmoke entities
-from the climate entity prefix. For example:
+In most installs this is enough. If Home Assistant has exactly one Asmoke pit
+thermostat, the cards select it automatically.
+
+When `climate` is configured, or when the card can infer one automatically, the
+related entities are resolved in this order:
+
+1. explicit entity overrides in the card YAML;
+2. entities on the same Home Assistant device when the frontend exposes device
+   registry data;
+3. the climate entity prefix.
+
+For prefix fallback, this means:
 
 ```text
 climate.asmoke_backyard_pit_thermostat -> asmoke_backyard
 ```
+
+For multiple smokers or fully renamed entities, select the Home Assistant device
+or climate entity:
+
+```yaml
+type: custom:asmoke-smoker-card
+device_id: 9f2a1a6d7c8e4b1f8c0d123456789abc
+```
+
+```yaml
+type: custom:asmoke-smoker-card
+climate: climate.asmoke_backyard_pit_thermostat
+```
+
+The same `device_id` or `climate` option can be used on the history and session
+cards.
 
 ## Optional overrides
 
@@ -131,6 +192,18 @@ max_temp: 300
 `refresh_interval` is in seconds. The history cards use Home Assistant recorder
 history, so their data depends on the recorder retention and includes only data
 that Home Assistant has already stored.
+
+## Troubleshooting
+
+If a card says it cannot select a smoker automatically:
+
+1. Open the card editor.
+2. Select `Asmoke device`, or select the `Pit thermostat` climate entity.
+3. Refresh the dashboard after saving.
+
+If history cards stay empty, check that the Home Assistant `recorder`
+integration is enabled and that the smoker entities have produced data within
+the selected `hours_to_show` window.
 
 ## Card picker
 

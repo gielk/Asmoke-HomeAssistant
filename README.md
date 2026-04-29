@@ -23,6 +23,24 @@ It can:
 
 The current integration also includes a pit climate entity, Quick target time control, direct start and stop buttons, and derived runtime sensors such as `Cook active`.
 
+## Dashboard cards
+
+The integration includes Home Assistant dashboard cards for daily smoker use:
+
+- live pit control with target temperature, Quick time, start, and stop controls;
+- BBQ-style temperature history for grill and probe sensors;
+- cook session history based on the `Cook active` entity.
+
+![Asmoke dashboard cards preview](docs/images/asmoke-dashboard-cards-preview.png)
+
+For a single Asmoke smoker, the cards can usually be added without entity YAML:
+
+```yaml
+type: custom:asmoke-smoker-card
+```
+
+For multiple smokers, select the smoker by Home Assistant device or climate entity. See [docs/custom-card.md](docs/custom-card.md).
+
 ## Quick start
 
 1. Add this repository to HACS as a custom repository of type `integration`.
@@ -36,6 +54,9 @@ The current integration also includes a pit climate entity, Quick target time co
 9. Select the discovered device that belongs to your smoker.
 10. Complete the config flow.
 
+For beta releases, enable prereleases/beta versions in HACS before selecting
+the newest beta.
+
 Note: host, port, and keepalive are prefilled with the known cloud defaults. The required MQTT username and password are intentionally not included in the public repository. If those values are not already available locally through `local_auth.json` or environment variables, contact the maintainer directly for setup help.
 
 ## Documentation
@@ -48,7 +69,7 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.4`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.5`.
 
 The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 

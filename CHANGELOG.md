@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4-beta.5 - 2026-04-29
+
+- Improved the dashboard cards so `climate` is no longer required when Home Assistant has a single Asmoke smoker, and added device-level entity resolution for renamed entities.
+- Expanded the dashboard card documentation with zero-config setup guidance, troubleshooting notes, and a visual preview image.
+
 ## v0.4.4-beta.4 - 2026-04-29
 
 - Added included Asmoke dashboard cards with tile-style live telemetry, BBQ-style temperature history, cook session history, Quick controls, and start/stop actions.

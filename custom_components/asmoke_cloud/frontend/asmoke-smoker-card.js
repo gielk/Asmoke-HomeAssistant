@@ -1,4 +1,4 @@
-const ASMOKE_SMOKER_CARD_VERSION = "0.2.0";
+const ASMOKE_SMOKER_CARD_VERSION = "0.3.0";
 const ASMOKE_SMOKER_CARD_TAG = "asmoke-smoker-card";
 const ASMOKE_SMOKER_CARD_EDITOR_TAG = "asmoke-smoker-card-editor";
 const ASMOKE_HISTORY_CARD_TAG = "asmoke-smoker-history-card";
@@ -29,6 +29,7 @@ const ASMOKE_ENTITY_KEYS = [
 
 const ASMOKE_EDITOR_LABELS = {
   name: "Name",
+  device_id: "Asmoke device",
   climate: "Pit thermostat",
   quick_time: "Quick target time",
   start_quick: "Start quick button",
@@ -36,6 +37,92 @@ const ASMOKE_EDITOR_LABELS = {
   cook_active: "Cook active",
   device_online: "Device online",
   broker_connected: "Broker connected",
+};
+
+const ASMOKE_ENTITY_DEFINITIONS = {
+  climate: {
+    domain: "climate",
+    suffixes: ["_pit_thermostat", "_pit_controller"],
+    translationKeys: ["pit_controller"],
+  },
+  quick_time: {
+    domain: "number",
+    suffixes: ["_quick_target_time"],
+    translationKeys: ["quick_target_time"],
+    aliases: ["quick_target_time"],
+  },
+  start_quick: {
+    domain: "button",
+    suffixes: ["_start_quick_cook"],
+    translationKeys: ["start_quick_cook"],
+    aliases: ["start_quick_cook"],
+  },
+  stop: {
+    domain: "button",
+    suffixes: ["_stop_cook"],
+    translationKeys: ["stop_cook"],
+    aliases: ["stop_cook"],
+  },
+  grill_temp_1: {
+    domain: "sensor",
+    suffixes: ["_grill_temperature_1"],
+    translationKeys: ["grill_temperature_1"],
+  },
+  grill_temp_2: {
+    domain: "sensor",
+    suffixes: ["_grill_temperature_2"],
+    translationKeys: ["grill_temperature_2"],
+  },
+  probe_a_temp: {
+    domain: "sensor",
+    suffixes: ["_probe_a_temperature"],
+    translationKeys: ["probe_a_temperature"],
+  },
+  probe_b_temp: {
+    domain: "sensor",
+    suffixes: ["_probe_b_temperature"],
+    translationKeys: ["probe_b_temperature"],
+  },
+  battery: {
+    domain: "sensor",
+    suffixes: ["_battery_level"],
+    translationKeys: ["battery_level"],
+  },
+  target_time: {
+    domain: "sensor",
+    suffixes: ["_target_time"],
+    translationKeys: ["target_time"],
+  },
+  mode: {
+    domain: "sensor",
+    suffixes: ["_mode"],
+    translationKeys: ["mode"],
+  },
+  broker_connected: {
+    domain: "binary_sensor",
+    suffixes: ["_broker_connected"],
+    translationKeys: ["broker_connected"],
+  },
+  device_online: {
+    domain: "binary_sensor",
+    suffixes: ["_device_online"],
+    translationKeys: ["device_online"],
+  },
+  cook_active: {
+    domain: "binary_sensor",
+    suffixes: ["_cook_active"],
+    translationKeys: ["cook_active"],
+  },
+  wifi_connected: {
+    domain: "binary_sensor",
+    suffixes: ["_wi_fi_connected", "_wifi_connected"],
+    translationKeys: ["wifi_connected"],
+  },
+  last_result: {
+    domain: "sensor",
+    suffixes: ["_last_result_message"],
+    translationKeys: ["last_result_message"],
+  },
 };
 
 const html = (value) =>
@@ -80,38 +167,92 @@ const deriveAsmokePrefix = (entityId) => {
   return objectId;
 };
 
-const buildAsmokeEntities = (config) => {
-  const prefix = config.entity_prefix || deriveAsmokePrefix(config.climate);
-  const entities = {
-    climate: config.climate,
-    quick_time:
-      config.quick_time ||
-      config.quick_target_time ||
-      `number.${prefix}_quick_target_time`,
-    start_quick:
-      config.start_quick ||
-      config.start_quick_cook ||
-      `button.${prefix}_start_quick_cook`,
-    stop: config.stop || config.stop_cook || `button.${prefix}_stop_cook`,
-    grill_temp_1: config.grill_temp_1 || `sensor.${prefix}_grill_temperature_1`,
-    grill_temp_2: config.grill_temp_2 || `sensor.${prefix}_grill_temperature_2`,
-    probe_a_temp: config.probe_a_temp || `sensor.${prefix}_probe_a_temperature`,
-    probe_b_temp: config.probe_b_temp || `sensor.${prefix}_probe_b_temperature`,
-    battery: config.battery || `sensor.${prefix}_battery_level`,
-    target_time: config.target_time || `sensor.${prefix}_target_time`,
-    mode: config.mode || `sensor.${prefix}_mode`,
-    broker_connected:
-      config.broker_connected || `binary_sensor.${prefix}_broker_connected`,
-    device_online: config.device_online || `binary_sensor.${prefix}_device_online`,
-    cook_active: config.cook_active || `binary_sensor.${prefix}_cook_active`,
-    wifi_connected: config.wifi_connected || `binary_sensor.${prefix}_wi_fi_connected`,
-    last_result: config.last_result || `sensor.${prefix}_last_result_message`,
-  };
+const registryEntry = (hass, entityId) => hass?.entities?.[entityId];
+
+const entityDomain = (entityId) => String(entityId ?? "").split(".")[0];
+
+const entityObjectId = (entityId) =>
+  String(entityId ?? "").includes(".") ? String(entityId).split(".").slice(1).join(".") : "";
+
+const configuredEntity = (config, key) => {
+  if (config[key]) {
+    return config[key];
+  }
+  for (const alias of ASMOKE_ENTITY_DEFINITIONS[key]?.aliases ?? []) {
+    if (config[alias]) {
+      return config[alias];
+    }
+  }
+  return undefined;
+};
+
+const entityMatchesDefinition = (hass, entityId, key) => {
+  const definition = ASMOKE_ENTITY_DEFINITIONS[key];
+  if (!definition || entityDomain(entityId) !== definition.domain) {
+    return false;
+  }
+  const objectId = entityObjectId(entityId);
+  const entry = registryEntry(hass, entityId);
+  return (
+    definition.suffixes.some((suffix) => objectId.endsWith(suffix)) ||
+    definition.translationKeys.includes(entry?.translation_key) ||
+    (key === "climate" && entry?.platform === "asmoke_cloud")
+  );
+};
+
+const deviceEntity = (hass, deviceId, key) => {
+  if (!hass?.states || !deviceId) {
+    return undefined;
+  }
+  return Object.keys(hass.states)
+    .filter((entityId) => registryEntry(hass, entityId)?.device_id === deviceId)
+    .find((entityId) => entityMatchesDefinition(hass, entityId, key));
+};
+
+const findAsmokeClimateCandidates = (hass) =>
+  Object.keys(hass?.states ?? {}).filter((entityId) =>
+    entityMatchesDefinition(hass, entityId, "climate"),
+  );
+
+const resolveAsmokeClimate = (hass, config) => {
+  if (config.climate) {
+    return config.climate;
+  }
+  if (config.device_id) {
+    const climate = deviceEntity(hass, config.device_id, "climate");
+    if (climate) {
+      return climate;
+    }
+  }
+  const candidates = findAsmokeClimateCandidates(hass);
+  return candidates.length === 1 ? candidates[0] : undefined;
+};
+
+const resolveAsmokeDeviceId = (hass, config, climate) =>
+  config.device_id || registryEntry(hass, climate)?.device_id;
+
+const defaultEntityForPrefix = (prefix, key) => {
+  const definition = ASMOKE_ENTITY_DEFINITIONS[key];
+  if (!prefix || !definition?.suffixes?.length) {
+    return undefined;
+  }
+  return `${definition.domain}.${prefix}${definition.suffixes[0]}`;
+};
+
+const buildAsmokeEntities = (config, hass) => {
+  const climate = resolveAsmokeClimate(hass, config);
+  const deviceId = resolveAsmokeDeviceId(hass, config, climate);
+  const prefix = config.entity_prefix || deriveAsmokePrefix(climate);
+  const entities = { climate };
 
   for (const key of ASMOKE_ENTITY_KEYS) {
-    if (config[key]) {
-      entities[key] = config[key];
+    if (key === "climate") {
+      continue;
     }
+    entities[key] =
+      configuredEntity(config, key) ||
+      deviceEntity(hass, deviceId, key) ||
+      defaultEntityForPrefix(prefix, key);
   }
 
   return entities;
@@ -223,16 +364,8 @@ const formatDateTime = (timestamp) => {
 
 class AsmokeSmokerCard extends HTMLElement {
   static getStubConfig(hass) {
-    const climate = Object.keys(hass?.states ?? {}).find(
-      (entityId) =>
-        entityId.startsWith("climate.") &&
-        (entityId.endsWith("_pit_thermostat") ||
-          entityId.endsWith("_pit_controller")),
-    );
-
-    return {
-      climate: climate ?? "climate.asmoke_backyard_pit_thermostat",
-    };
+    const climate = resolveAsmokeClimate(hass, {});
+    return climate ? { climate } : {};
   }
 
   static getConfigElement() {
@@ -248,11 +381,7 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config?.climate) {
-      throw new Error("Asmoke smoker card requires a climate entity");
-    }
-
-    this._config = { ...config };
+    this._config = { ...(config ?? {}) };
     this._entities = this._buildEntities();
     this._render();
   }
@@ -276,7 +405,7 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   _buildEntities() {
-    return buildAsmokeEntities(this._config);
+    return buildAsmokeEntities(this._config, this._hass);
   }
 
   _derivePrefix(entityId) {
@@ -322,7 +451,7 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   _render() {
-    if (!this.shadowRoot || !this._config?.climate) {
+    if (!this.shadowRoot) {
       return;
     }
 
@@ -332,6 +461,13 @@ class AsmokeSmokerCard extends HTMLElement {
     }
 
     this._entities = this._buildEntities();
+    if (!this._entities.climate) {
+      this._renderEntitySetupHelp(
+        "Asmoke smoker card",
+        "No Asmoke smoker could be selected automatically. Add a climate entity or choose an Asmoke device in the card editor.",
+      );
+      return;
+    }
     const climate = this._state(this._entities.climate);
 
     if (!climate) {
@@ -530,6 +666,14 @@ class AsmokeSmokerCard extends HTMLElement {
         </div>
       </ha-card>
     `;
+  }
+
+  _renderEntitySetupHelp(title, detail) {
+    const candidates = findAsmokeClimateCandidates(this._hass);
+    const candidateText = candidates.length
+      ? ` Candidates: ${candidates.join(", ")}.`
+      : "";
+    this._renderError(title, `${detail}${candidateText}`);
   }
 
   _temperatureTile(label, entityId, icon, max, tone) {
@@ -1175,8 +1319,11 @@ class AsmokeSmokerCardEditor extends HTMLElement {
     form.schema = [
       { name: "name", selector: { text: {} } },
       {
+        name: "device_id",
+        selector: { device: { integration: "asmoke_cloud" } },
+      },
+      {
         name: "climate",
-        required: true,
         selector: { entity: { domain: "climate" } },
       },
       { name: "quick_time", selector: { entity: { domain: "number" } } },
@@ -1205,7 +1352,7 @@ class AsmokeSmokerCardEditor extends HTMLElement {
 class AsmokeSmokerHistoryCard extends HTMLElement {
   static getStubConfig(hass) {
     return {
-      climate: AsmokeSmokerCard.getStubConfig(hass).climate,
+      ...AsmokeSmokerCard.getStubConfig(hass),
       hours_to_show: 6,
     };
   }
@@ -1228,15 +1375,12 @@ class AsmokeSmokerHistoryCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config?.climate) {
-      throw new Error("Asmoke history card requires a climate entity");
-    }
     this._config = {
       hours_to_show: 6,
       refresh_interval: 300,
-      ...config,
+      ...(config ?? {}),
     };
-    this._entities = buildAsmokeEntities(this._config);
+    this._entities = buildAsmokeEntities(this._config, this._hass);
     this._history = {};
     this._lastFetchAt = 0;
     this._render();
@@ -1286,7 +1430,8 @@ class AsmokeSmokerHistoryCard extends HTMLElement {
   }
 
   _maybeLoadHistory(force = false) {
-    if (!this._hass || !this._config?.climate || this._loading) {
+    this._entities = buildAsmokeEntities(this._config, this._hass);
+    if (!this._hass || !this._entities.climate || this._loading) {
       return;
     }
     if (!force && Date.now() - this._lastFetchAt < this._refreshMs()) {
@@ -1423,7 +1568,21 @@ class AsmokeSmokerHistoryCard extends HTMLElement {
   }
 
   _render() {
-    if (!this.shadowRoot || !this._config?.climate) {
+    if (!this.shadowRoot) {
+      return;
+    }
+    this._entities = buildAsmokeEntities(this._config, this._hass);
+
+    if (!this._hass) {
+      this.shadowRoot.innerHTML = this._styles();
+      return;
+    }
+
+    if (!this._entities.climate) {
+      this._renderEntitySetupHelp(
+        "Asmoke temperature history",
+        "No Asmoke smoker could be selected automatically. Add a climate entity or choose an Asmoke device in the card editor.",
+      );
       return;
     }
 
@@ -1605,6 +1764,30 @@ class AsmokeSmokerHistoryCard extends HTMLElement {
         }),
       );
     }
+  }
+
+  _renderEntitySetupHelp(title, detail) {
+    const candidates = findAsmokeClimateCandidates(this._hass);
+    const candidateText = candidates.length
+      ? ` Candidates: ${candidates.join(", ")}.`
+      : "";
+    this.shadowRoot.innerHTML = `
+      ${this._styles()}
+      <ha-card>
+        <div class="history-shell">
+          <header class="history-header">
+            <span class="history-title">
+              <span class="history-icon"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></span>
+              <span class="history-copy">
+                <span class="history-eyebrow">Configuration</span>
+                <span class="history-heading">${html(title)}</span>
+              </span>
+            </span>
+          </header>
+          <p class="history-error">${html(`${detail}${candidateText}`)}</p>
+        </div>
+      </ha-card>
+    `;
   }
 
   _styles() {
@@ -1884,7 +2067,7 @@ class AsmokeSmokerHistoryCard extends HTMLElement {
 class AsmokeSmokerSessionCard extends HTMLElement {
   static getStubConfig(hass) {
     return {
-      climate: AsmokeSmokerCard.getStubConfig(hass).climate,
+      ...AsmokeSmokerCard.getStubConfig(hass),
       hours_to_show: 24,
     };
   }
@@ -1907,15 +2090,12 @@ class AsmokeSmokerSessionCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config?.climate) {
-      throw new Error("Asmoke session card requires a climate entity");
-    }
     this._config = {
       hours_to_show: 24,
       refresh_interval: 300,
-      ...config,
+      ...(config ?? {}),
     };
-    this._entities = buildAsmokeEntities(this._config);
+    this._entities = buildAsmokeEntities(this._config, this._hass);
     this._history = {};
     this._lastFetchAt = 0;
     this._render();
@@ -1964,7 +2144,8 @@ class AsmokeSmokerSessionCard extends HTMLElement {
   }
 
   _maybeLoadHistory(force = false) {
-    if (!this._hass || !this._config?.climate || this._loading) {
+    this._entities = buildAsmokeEntities(this._config, this._hass);
+    if (!this._hass || !this._entities.climate || this._loading) {
       return;
     }
     if (!force && Date.now() - this._lastFetchAt < this._refreshMs()) {
@@ -2079,7 +2260,21 @@ class AsmokeSmokerSessionCard extends HTMLElement {
   }
 
   _render() {
-    if (!this.shadowRoot || !this._config?.climate) {
+    if (!this.shadowRoot) {
+      return;
+    }
+    this._entities = buildAsmokeEntities(this._config, this._hass);
+
+    if (!this._hass) {
+      this.shadowRoot.innerHTML = this._styles();
+      return;
+    }
+
+    if (!this._entities.climate) {
+      this._renderEntitySetupHelp(
+        "Asmoke cook sessions",
+        "No Asmoke smoker could be selected automatically. Add a climate entity or choose an Asmoke device in the card editor.",
+      );
       return;
     }
 
@@ -2220,6 +2415,30 @@ class AsmokeSmokerSessionCard extends HTMLElement {
         }),
       );
     }
+  }
+
+  _renderEntitySetupHelp(title, detail) {
+    const candidates = findAsmokeClimateCandidates(this._hass);
+    const candidateText = candidates.length
+      ? ` Candidates: ${candidates.join(", ")}.`
+      : "";
+    this.shadowRoot.innerHTML = `
+      ${this._styles()}
+      <ha-card>
+        <div class="session-shell">
+          <header class="session-header">
+            <span class="session-title">
+              <span class="session-icon"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></span>
+              <span class="session-copy">
+                <span class="session-eyebrow">Configuration</span>
+                <span class="session-heading">${html(title)}</span>
+              </span>
+            </span>
+          </header>
+          <p class="session-error">${html(`${detail}${candidateText}`)}</p>
+        </div>
+      </ha-card>
+    `;
   }
 
   _styles() {
@@ -2528,7 +2747,8 @@ class AsmokeSmokerHistoryCardEditor extends HTMLElement {
     form.data = this._config;
     form.schema = [
       { name: "name", selector: { text: {} } },
-      { name: "climate", required: true, selector: { entity: { domain: "climate" } } },
+      { name: "device_id", selector: { device: { integration: "asmoke_cloud" } } },
+      { name: "climate", selector: { entity: { domain: "climate" } } },
       { name: "hours_to_show", selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } },
       { name: "refresh_interval", selector: { number: { min: 60, max: 3600, step: 30, mode: "box" } } },
       { name: "grill_temp_1", selector: { entity: { domain: "sensor" } } },
@@ -2538,6 +2758,7 @@ class AsmokeSmokerHistoryCardEditor extends HTMLElement {
     ];
     form.computeLabel = (schema) => ({
       name: "Name",
+      device_id: "Asmoke device",
       climate: "Pit thermostat",
       hours_to_show: "Hours to show",
       refresh_interval: "Refresh interval seconds",
@@ -2589,7 +2810,8 @@ class AsmokeSmokerSessionCardEditor extends HTMLElement {
     form.data = this._config;
     form.schema = [
       { name: "name", selector: { text: {} } },
-      { name: "climate", required: true, selector: { entity: { domain: "climate" } } },
+      { name: "device_id", selector: { device: { integration: "asmoke_cloud" } } },
+      { name: "climate", selector: { entity: { domain: "climate" } } },
       { name: "hours_to_show", selector: { number: { min: 1, max: 336, step: 1, mode: "box" } } },
       { name: "refresh_interval", selector: { number: { min: 60, max: 3600, step: 30, mode: "box" } } },
       { name: "cook_active", selector: { entity: { domain: "binary_sensor" } } },
@@ -2598,6 +2820,7 @@ class AsmokeSmokerSessionCardEditor extends HTMLElement {
     ];
     form.computeLabel = (schema) => ({
       name: "Name",
+      device_id: "Asmoke device",
       climate: "Pit thermostat",
       hours_to_show: "Hours to show",
       refresh_interval: "Refresh interval seconds",

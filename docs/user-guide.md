@@ -34,7 +34,7 @@ Important: the MQTT username and password are intentionally not stored in the pu
 
 The repository includes the following documentation for the current entity set:
 
-- [custom-card.md](custom-card.md) for the included Asmoke Smoker Card;
+- [custom-card.md](custom-card.md) for the included Asmoke dashboard cards;
 - [dashboard-example.md](dashboard-example.md) for a complete Lovelace view with dashboard YAML;
 - [dashboard-example.yaml](dashboard-example.yaml) as a directly copyable YAML file;
 - [automation-examples.md](automation-examples.md) for updated automations and helper-driven examples.
@@ -126,18 +126,21 @@ The easiest dashboard start is the included custom card set:
 
 ```yaml
 - type: custom:asmoke-smoker-card
-  climate: climate.asmoke_backyard_pit_thermostat
 
 - type: custom:asmoke-smoker-history-card
-  climate: climate.asmoke_backyard_pit_thermostat
   hours_to_show: 6
 
 - type: custom:asmoke-smoker-session-card
-  climate: climate.asmoke_backyard_pit_thermostat
   hours_to_show: 24
 ```
 
-See [custom-card.md](custom-card.md) for loading instructions and optional entity overrides.
+If you have multiple Asmoke smokers, select the smoker by `device_id` or
+`climate`. See [custom-card.md](custom-card.md) for loading instructions and
+optional entity overrides.
+
+The cards are designed for the first dashboard setup. You can still build your
+own dashboard with the individual Home Assistant entities if you want a more
+custom layout.
 
 Recommended first checks:
 

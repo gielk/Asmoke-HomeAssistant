@@ -29,6 +29,17 @@ def test_frontend_card_asset_is_shipped() -> None:
     assert "customElements.define" in card_source
 
 
+def test_dashboard_preview_image_exists() -> None:
+    image_path = (
+        Path(__file__).resolve().parents[3]
+        / "docs"
+        / "images"
+        / "asmoke-dashboard-cards-preview.png"
+    )
+
+    assert image_path.is_file()
+
+
 def test_icons_json_defines_custom_entity_icons() -> None:
     icons_path = _integration_dir() / "icons.json"
     icons = json.loads(icons_path.read_text())

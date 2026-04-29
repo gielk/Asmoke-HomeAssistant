@@ -18,6 +18,10 @@ This document matches the current Asmoke entity set and uses:
 
 If the custom card is not available in the picker yet, see [custom-card.md](custom-card.md).
 
+For a single Asmoke smoker, the custom cards can also be added without entity
+YAML. The longer example keeps explicit entities so it remains easy to adapt and
+inspect.
+
 ## What this dashboard shows
 
 - central pit control through the climate card;
