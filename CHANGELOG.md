@@ -6,6 +6,10 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4-beta.1 - 2026-04-29
+
+- Reworked the initial config flow so onboarding starts with a clearer prerequisites step that explains broker credentials are not in the public repository and gives better guidance for auto discovery.
+
 ## v0.4.3 - 2026-04-21
 
 - Translated the public documentation set to English so the project can be shared externally without Dutch-only guides and examples.

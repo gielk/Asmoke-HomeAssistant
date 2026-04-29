@@ -50,7 +50,24 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
         return AsmokeOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        return self.async_show_menu(step_id="user", menu_options=["discover", "manual"])
+        if user_input is not None:
+            return await self.async_step_setup_method()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "local_auth": "yes" if has_local_auth_defaults(self.hass) else "no"
+            },
+        )
+
+    async def async_step_setup_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        return self.async_show_menu(
+            step_id="setup_method",
+            menu_options=["discover", "manual"],
+        )
 
     async def async_step_discover(
         self, user_input: dict[str, Any] | None = None

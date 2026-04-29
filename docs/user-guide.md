@@ -15,6 +15,8 @@ You need:
 
 The grill does not need to be powered on to install the integration. If the grill is off, the integration will still load, but no live telemetry updates will come in.
 
+Important: the MQTT username and password are intentionally not stored in the public repository. If they are not already available in a private local auth file, contact the maintainer directly for setup help.
+
 ## Installation via HACS
 
 1. Open HACS in Home Assistant.
@@ -42,23 +44,25 @@ The repository includes the following documentation for the current entity set:
 2. Go to `Settings -> Devices & Services`.
 3. Click `Add Integration`.
 4. Choose `Asmoke Cloud`.
-5. Choose one of these routes:
-   `Discover Asmoke device`
-   `Enter device ID manually`
-6. For discovery:
+5. Read the prerequisites screen in the config flow.
+6. Choose one of these routes:
+  `Auto-discover device ID`
+  `Enter device ID manually`
+7. For auto discovery:
   optionally enter a name;
   verify host, port, username, password, and keepalive;
-  turn on the grill or open the Asmoke app;
+  turn on the smoker;
+  open the Asmoke app on a phone connected to the same local network as the smoker;
   wait for Home Assistant to receive a fresh status message and learn the `device_id` automatically.
-7. For manual entry:
+8. For manual entry:
   enter `device_id`;
   optionally enter a name;
   verify host, port, username, password, and keepalive.
-8. Complete the config flow.
+9. Complete the config flow.
 
 ## Where do these values come from?
 
-You do not get these values from Home Assistant itself. For this integration they come from Asmoke app traffic analysis, prior reverse-engineering notes, or a local file where you already stored them.
+You do not get these values from Home Assistant itself. In practice, the required connection details need to come from a private local auth file, prior setup information you already have, or direct setup help from the maintainer.
 
 In practice you need the following values:
 
@@ -71,14 +75,11 @@ In practice you need the following values:
 
 If you already captured or stored those values, the easiest route is to prefill them locally through a `local_auth.json` file so you do not have to type them manually in the config flow.
 
-If you do not have them yet, there are two realistic options:
-
-1. reuse values from earlier reverse-engineering notes;
-2. repeat a packet capture or MITM analysis to confirm the app connection again.
+If you do not have them yet, do not expect to find them in the public repository. The intended path is to request setup help from the maintainer instead of trying to discover public credentials in the repo.
 
 The integration can try to discover `device_id` automatically by temporarily listening on `device/status/+`, but that only works if Home Assistant can already log in with valid broker credentials.
 
-This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. If you already know those values privately, you can prefill them locally and let discovery learn only the `device_id`.
+This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. If you already have those values privately, you can prefill them locally and let discovery learn only the `device_id`.
 
 ## Optional local prefilling
 

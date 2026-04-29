@@ -10,17 +10,26 @@ from custom_components.asmoke_cloud.const import DOMAIN
 from custom_components.asmoke_cloud.mqtt import AsmokeAuthenticationError, AsmokeDiscoveryError
 
 
-async def test_user_flow_shows_discover_and_manual_menu(hass, bypass_runtime_start) -> None:
+async def test_user_flow_shows_intro_then_setup_menu(hass, bypass_runtime_start) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
 
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
     assert result["type"] == "menu"
     assert set(result["menu_options"]) == {"discover", "manual"}
+    assert result["step_id"] == "setup_method"
 
 
-def test_user_flow_menu_option_translations_exist() -> None:
+def test_setup_method_menu_option_translations_exist() -> None:
     translation_path = (
         Path(__file__).resolve().parents[3]
         / "custom_components"
@@ -30,8 +39,8 @@ def test_user_flow_menu_option_translations_exist() -> None:
     )
     translations = json.loads(translation_path.read_text())
 
-    assert translations["config"]["step"]["user"]["menu_options"] == {
-        "discover": "Discover Asmoke device",
+    assert translations["config"]["step"]["setup_method"]["menu_options"] == {
+        "discover": "Auto-discover device ID",
         "manual": "Enter device ID manually",
     }
 
@@ -40,6 +49,11 @@ async def test_manual_flow_creates_entry(hass, bypass_runtime_start) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -77,6 +91,11 @@ async def test_manual_flow_shows_error_on_auth_failure(hass, bypass_runtime_star
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"next_step_id": "manual"},
     )
 
@@ -110,6 +129,11 @@ async def test_discover_flow_creates_entry(hass, bypass_runtime_start) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"next_step_id": "discover"},
     )
 
@@ -139,6 +163,11 @@ async def test_discover_flow_shows_error_when_no_device_found(hass, bypass_runti
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
     result = await hass.config_entries.flow.async_configure(
