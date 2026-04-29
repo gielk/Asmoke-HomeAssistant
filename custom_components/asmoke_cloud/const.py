@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
-    CONF_DEVICE_ID,
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,

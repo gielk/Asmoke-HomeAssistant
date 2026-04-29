@@ -31,7 +31,7 @@ from .mqtt import (
     AsmokeAuthenticationError,
     AsmokeConnectionError,
     AsmokeDiscoveryError,
-    async_discover_device,
+    async_discover_devices,
     async_validate_broker_connection,
 )
 
@@ -40,8 +40,37 @@ def _string_default(value: Any, fallback: str = "") -> str:
     return fallback if value is None else str(value)
 
 
+def _candidate_label(candidate: Mapping[str, Any]) -> str:
+    parts = [str(candidate[CONF_DEVICE_ID])]
+
+    if message_count := candidate.get("message_count"):
+        parts.append(f"{message_count} messages")
+    if status := candidate.get("status"):
+        parts.append(f"status {status}")
+    if mode := candidate.get("mode"):
+        parts.append(f"mode {mode}")
+    battery = candidate.get("battery_level")
+    if battery is not None:
+        parts.append(f"battery {battery}%")
+
+    grill_temps = [
+        str(value)
+        for value in (candidate.get("grill_temp_1"), candidate.get("grill_temp_2"))
+        if value is not None
+    ]
+    if grill_temps:
+        parts.append(f"grill {'/'.join(grill_temps)} C")
+
+    return " - ".join(parts)
+
+
 class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
+    def __init__(self) -> None:
+        self._discovery_config: dict[str, Any] | None = None
+        self._discovery_candidates: dict[str, dict[str, Any]] = {}
+        self._reauth_entry: ConfigEntry | None = None
 
     def _local_auth_status_text(self) -> str:
         if has_local_auth_defaults(self.hass):
@@ -54,8 +83,6 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             "not present yet on this Home Assistant instance; broker fields will "
             "not be prefilled automatically"
         )
-
-    _reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
@@ -89,7 +116,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             merged = merge_connection_input(user_input, self.hass)
 
             try:
-                discovered = await async_discover_device(merged)
+                discovered = await async_discover_devices(merged, timeout=45.0)
             except AsmokeAuthenticationError:
                 errors["base"] = "invalid_auth"
             except AsmokeDiscoveryError:
@@ -97,18 +124,52 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             except AsmokeConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                merged[CONF_DEVICE_ID] = str(discovered[CONF_DEVICE_ID])
-                await self.async_set_unique_id(str(merged[CONF_DEVICE_ID]))
-                self._abort_if_unique_id_configured()
-
-                title = str(merged.get(CONF_NAME) or f"Asmoke {merged[CONF_DEVICE_ID]}")
-                return self.async_create_entry(title=title, data=merged)
+                self._discovery_config = merged
+                self._discovery_candidates = {
+                    str(candidate[CONF_DEVICE_ID]): candidate
+                    for candidate in discovered
+                }
+                return await self.async_step_confirm_discovery()
 
         return self.async_show_form(
             step_id="discover",
             data_schema=self._discover_schema(defaults),
             errors=errors,
             description_placeholders={"local_auth": self._local_auth_status_text()},
+        )
+
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        if self._discovery_config is None or not self._discovery_candidates:
+            return await self.async_step_discover()
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            device_id = str(user_input[CONF_DEVICE_ID])
+            if device_id not in self._discovery_candidates:
+                errors["base"] = "unknown_device"
+            else:
+                merged = {**self._discovery_config, CONF_DEVICE_ID: device_id}
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_configured()
+
+                title = str(merged.get(CONF_NAME) or f"Asmoke {device_id}")
+                return self.async_create_entry(title=title, data=merged)
+
+        candidate_labels = [
+            _candidate_label(candidate)
+            for candidate in self._discovery_candidates.values()
+        ]
+        return self.async_show_form(
+            step_id="confirm_discovery",
+            data_schema=self._confirm_discovery_schema(),
+            errors=errors,
+            description_placeholders={
+                "candidate_count": str(len(candidate_labels)),
+                "candidates": "\n".join(candidate_labels),
+            },
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -206,6 +267,19 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_KEEPALIVE,
                     default=int(defaults.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)),
                 ): int,
+            }
+        )
+
+    def _confirm_discovery_schema(self) -> vol.Schema:
+        options = {
+            device_id: _candidate_label(candidate)
+            for device_id, candidate in self._discovery_candidates.items()
+        }
+        default = next(iter(options))
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID, default=default): vol.In(options),
             }
         )
 

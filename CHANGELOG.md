@@ -6,6 +6,10 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4-beta.3 - 2026-04-29
+
+- Changed auto discovery so it collects candidate Asmoke devices and asks the user to confirm the correct one before creating the integration entry.
+
 ## v0.4.4-beta.2 - 2026-04-29
 
 - Added explicit Home Assistant entity icon translations for the custom buttons, time controls, and status sensors, and locked in the local HACS/Home Assistant brand assets with metadata tests.

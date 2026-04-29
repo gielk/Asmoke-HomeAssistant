@@ -61,7 +61,7 @@ The config flow currently offers two routes:
 1. `discover`
 2. `manual`
 
-For `discover`, Home Assistant temporarily logs in to the broker and listens on `device/status/+` to find a `device_id`. For `manual`, the user enters the `device_id` directly.
+For `discover`, Home Assistant temporarily logs in to the broker and listens on the known Asmoke device topics with a single-level wildcard to collect candidate `device_id` values. The user then confirms which discovered candidate belongs to the smoker before the config entry is created. For `manual`, the user enters the `device_id` directly.
 
 In the current version both routes ask for broker host, port, username, password, and keepalive, unless those values are already prefilled through local auth or environment variables.
 

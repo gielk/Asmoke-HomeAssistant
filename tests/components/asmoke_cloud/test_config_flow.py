@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_DEVICE_ID
 
 from custom_components.asmoke_cloud.const import DOMAIN
 from custom_components.asmoke_cloud.mqtt import AsmokeAuthenticationError, AsmokeDiscoveryError
@@ -156,9 +157,19 @@ async def test_discover_flow_creates_entry(hass, bypass_runtime_start) -> None:
     )
 
     with patch(
-        "custom_components.asmoke_cloud.config_flow.async_discover_device",
+        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
         new_callable=AsyncMock,
-        return_value={"device_id": "A08241009A12582"},
+        return_value=[
+            {
+                CONF_DEVICE_ID: "A08241009A12582",
+                "message_count": 2,
+                "status": "idle",
+                "mode": "QUICK",
+                "battery_level": 47,
+                "grill_temp_1": 135,
+                "grill_temp_2": 159,
+            }
+        ],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,9 +183,70 @@ async def test_discover_flow_creates_entry(hass, bypass_runtime_start) -> None:
             },
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Asmoke Backyard"
-    assert result2["data"]["device_id"] == "A08241009A12582"
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "confirm_discovery"
+    assert "A08241009A12582" in result2["description_placeholders"]["candidates"]
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE_ID: "A08241009A12582"},
+    )
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "Asmoke Backyard"
+    assert result3["data"]["device_id"] == "A08241009A12582"
+
+
+async def test_discover_flow_requires_user_to_choose_candidate(
+    hass,
+    bypass_runtime_start,
+) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "discover"},
+    )
+
+    with patch(
+        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
+        new_callable=AsyncMock,
+        return_value=[
+            {CONF_DEVICE_ID: "A08241009A12582", "message_count": 3},
+            {CONF_DEVICE_ID: "A08241009A99999", "message_count": 1},
+        ],
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Asmoke Backyard",
+                "host": "47.253.1.220",
+                "port": 1883,
+                "username": "test-user",
+                "password": "test-pass",
+                "keepalive": 60,
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "confirm_discovery"
+    assert result2["description_placeholders"]["candidate_count"] == "2"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE_ID: "A08241009A99999"},
+    )
+
+    assert result3["type"] == "create_entry"
+    assert result3["data"][CONF_DEVICE_ID] == "A08241009A99999"
 
 
 async def test_discover_flow_shows_error_when_no_device_found(hass, bypass_runtime_start) -> None:
@@ -194,7 +266,7 @@ async def test_discover_flow_shows_error_when_no_device_found(hass, bypass_runti
     )
 
     with patch(
-        "custom_components.asmoke_cloud.config_flow.async_discover_device",
+        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
         new_callable=AsyncMock,
         side_effect=AsmokeDiscoveryError,
     ):

@@ -31,7 +31,6 @@ from .const import (
     CONF_OFFLINE_TIMEOUT,
     DEFAULT_KEEPALIVE,
     DEFAULT_OFFLINE_TIMEOUT,
-    DEFAULT_TARGET_TEMPERATURE,
     INACTIVE_STATUS_VALUES,
     action_topic,
     roast_topic,
@@ -42,6 +41,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 _MQTT_MODULE: Any | None = None
+_DISCOVERY_TOPIC_PREFIXES = {
+    "device/status/": "status",
+    "device/temperatures/": "temperatures",
+    "device/result/": "result",
+    "device/roast/": "roast",
+}
+_DISCOVERY_TOPICS = tuple(f"{prefix}+" for prefix in _DISCOVERY_TOPIC_PREFIXES)
 
 
 class AsmokeConnectionError(HomeAssistantError):
@@ -149,17 +155,22 @@ def _decode_raw_payload(payload: bytes) -> Any:
         return text
 
 
-def _extract_discovery_device_id(topic: str, payload: Any) -> str | None:
-    if topic.startswith("device/status/"):
-        discovered = _normalize_string(topic.removeprefix("device/status/"))
+def _extract_device_id_from_topic(topic: str) -> str | None:
+    for prefix in _DISCOVERY_TOPIC_PREFIXES:
+        if topic.startswith(prefix):
+            return _normalize_string(topic.removeprefix(prefix))
+
+    return None
+
+
+def _extract_device_id_from_payload(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+
+    for key in ("deviceID", "deviceId", "device_id"):
+        discovered = _normalize_string(payload.get(key))
         if discovered is not None:
             return discovered
-
-    if isinstance(payload, dict):
-        for key in ("deviceID", "deviceId", "device_id"):
-            discovered = _normalize_string(payload.get(key))
-            if discovered is not None:
-                return discovered
 
     return None
 
@@ -215,15 +226,183 @@ def _default_client_id(device_id: str, entry_id: str) -> str:
     return f"ha_asmoke_{device_id.lower()}_{entry_id[:8]}"
 
 
+def _new_discovery_candidate(device_id: str) -> dict[str, Any]:
+    return {
+        CONF_DEVICE_ID: device_id,
+        "message_count": 0,
+        "topics": [],
+        "topic_types": [],
+        "last_seen_at": None,
+        "score": 0,
+        "payload_matches_topic": False,
+        "status": None,
+        "mode": None,
+        "battery_level": None,
+        "target_temp": None,
+        "target_time": None,
+        "grill_temp_1": None,
+        "grill_temp_2": None,
+        "probe_a_temp": None,
+        "probe_b_temp": None,
+        "grill_type": None,
+        "firmware_version": None,
+        "last_result_message": None,
+    }
+
+
+def _discovery_topic_type(topic: str) -> str | None:
+    for prefix, topic_type in _DISCOVERY_TOPIC_PREFIXES.items():
+        if topic.startswith(prefix):
+            return topic_type
+
+    return None
+
+
+def _append_unique(values: list[str], value: str | None) -> None:
+    if value is not None and value not in values:
+        values.append(value)
+
+
+def _apply_discovery_temperatures(
+    candidate: dict[str, Any],
+    payload: Mapping[str, Any],
+) -> None:
+    field_mapping = {
+        "grillTemp1": ("grill_temp_1", _normalize_int),
+        "grillTemp2": ("grill_temp_2", _normalize_int),
+        "probeATemp": ("probe_a_temp", _normalize_probe_temp),
+        "probeBTemp": ("probe_b_temp", _normalize_probe_temp),
+    }
+
+    for payload_key, (candidate_key, normalizer) in field_mapping.items():
+        if payload_key in payload:
+            candidate[candidate_key] = normalizer(payload[payload_key])
+
+
+def _score_discovery_candidate(candidate: Mapping[str, Any]) -> int:
+    topic_types = set(candidate.get("topic_types", []))
+    score = min(int(candidate.get("message_count", 0)), 10) * 2
+
+    if "status" in topic_types:
+        score += 40
+    if "temperatures" in topic_types:
+        score += 25
+    if "result" in topic_types:
+        score += 10
+    if "roast" in topic_types:
+        score += 10
+    if candidate.get("payload_matches_topic"):
+        score += 20
+    if any(
+        candidate.get(key) is not None
+        for key in (
+            "status",
+            "mode",
+            "battery_level",
+            "grill_temp_1",
+            "grill_temp_2",
+            "probe_a_temp",
+            "probe_b_temp",
+        )
+    ):
+        score += 10
+
+    return score
+
+
+def _apply_discovery_message(
+    candidates: dict[str, dict[str, Any]],
+    topic: str,
+    payload: Any,
+) -> None:
+    topic_device_id = _extract_device_id_from_topic(topic)
+    payload_device_id = _extract_device_id_from_payload(payload)
+    if (
+        topic_device_id is not None
+        and payload_device_id is not None
+        and topic_device_id != payload_device_id
+    ):
+        return
+
+    device_id = topic_device_id or payload_device_id
+    if device_id is None:
+        return
+
+    candidate = candidates.setdefault(device_id, _new_discovery_candidate(device_id))
+    topic_type = _discovery_topic_type(topic)
+    candidate["message_count"] += 1
+    candidate["last_seen_at"] = _utcnow().isoformat()
+    _append_unique(candidate["topics"], topic)
+    _append_unique(candidate["topic_types"], topic_type)
+
+    if topic_device_id is not None and payload_device_id is not None:
+        candidate["payload_matches_topic"] = True
+
+    if not isinstance(payload, dict):
+        candidate["score"] = _score_discovery_candidate(candidate)
+        return
+
+    if topic_type == "status":
+        grill = payload.get("grill") if isinstance(payload.get("grill"), dict) else {}
+        candidate["status"] = _normalize_string(payload.get("status"))
+        candidate["mode"] = _normalize_string(payload.get("mode"))
+        candidate["battery_level"] = _normalize_int(payload.get("batteryLevel"))
+        candidate["target_temp"] = _normalize_int(
+            payload.get("targetTemp", grill.get("targetTemp"))
+        )
+        candidate["target_time"] = _normalize_int(
+            payload.get("targetTime", grill.get("targetTime"))
+        )
+
+        if grill_type := _extract_grill_type(payload):
+            candidate["grill_type"] = grill_type
+        if firmware_version := _extract_firmware_version(payload):
+            candidate["firmware_version"] = firmware_version
+
+        temperatures = payload.get("temperatures")
+        if isinstance(temperatures, dict):
+            _apply_discovery_temperatures(candidate, temperatures)
+
+    elif topic_type == "temperatures":
+        _apply_discovery_temperatures(candidate, payload)
+
+    elif topic_type == "result":
+        candidate["last_result_message"] = _normalize_string(payload.get("message"))
+
+    candidate["score"] = _score_discovery_candidate(candidate)
+
+
+def _sorted_discovery_candidates(
+    candidates: Mapping[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return sorted(
+        candidates.values(),
+        key=lambda candidate: (
+            int(candidate.get("score", 0)),
+            int(candidate.get("message_count", 0)),
+            str(candidate.get("last_seen_at") or ""),
+        ),
+        reverse=True,
+    )
+
+
 async def async_validate_broker_connection(config: Mapping[str, Any]) -> None:
     await asyncio.to_thread(_validate_broker_connection, dict(config))
 
 
+async def async_discover_devices(
+    config: Mapping[str, Any],
+    timeout: float = 30.0,
+) -> list[dict[str, Any]]:
+    return await asyncio.to_thread(_discover_devices, dict(config), timeout)
+
+
 async def async_discover_device(
     config: Mapping[str, Any],
-    timeout: float = 15.0,
+    timeout: float = 30.0,
 ) -> dict[str, Any]:
-    return await asyncio.to_thread(_discover_device, dict(config), timeout)
+    candidates = await async_discover_devices(config, timeout)
+    return candidates[0]
 
 
 def _validate_broker_connection(config: dict[str, Any]) -> None:
@@ -299,7 +478,7 @@ def _validate_broker_connection(config: dict[str, Any]) -> None:
         raise AsmokeConnectionError(f"Broker disconnected with rc={result['error']}")
 
 
-def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
+def _discover_devices(config: dict[str, Any], timeout: float) -> list[dict[str, Any]]:
     mqtt = _mqtt_module()
     username = str(config.get(CONF_USERNAME, "")).strip()
     password = str(config.get(CONF_PASSWORD, "")).strip()
@@ -311,13 +490,13 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
     if not username or not password:
         raise AsmokeAuthenticationError("Missing MQTT credentials")
 
-    event = threading.Event()
+    connect_event = threading.Event()
+    disconnect_event = threading.Event()
     result: dict[str, Any] = {
         "rc": None,
         "error": None,
-        "device_id": None,
-        "payload": None,
     }
+    candidates: dict[str, dict[str, Any]] = {}
 
     client = mqtt.Client(
         client_id=f"ha_discover_{int(time.time())}",
@@ -333,11 +512,11 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
         _properties: Any = None,
     ) -> None:
         result["rc"] = rc
+        connect_event.set()
         if rc == 0:
-            connected_client.subscribe("device/status/+", qos=0)
+            for topic in _DISCOVERY_TOPICS:
+                connected_client.subscribe(topic, qos=0)
             return
-
-        event.set()
 
     def on_disconnect(
         _client: Any,
@@ -345,9 +524,9 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
         rc: int,
         _properties: Any = None,
     ) -> None:
-        if result["device_id"] is None and rc != 0:
+        if rc != 0:
             result["error"] = rc
-            event.set()
+            disconnect_event.set()
 
     def on_message(
         _client: Any,
@@ -355,13 +534,7 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
         message: Any,
     ) -> None:
         payload = _decode_raw_payload(bytes(message.payload))
-        device_id = _extract_discovery_device_id(message.topic, payload)
-        if device_id is None:
-            return
-
-        result["device_id"] = device_id
-        result["payload"] = payload
-        event.set()
+        _apply_discovery_message(candidates, message.topic, payload)
 
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
@@ -375,10 +548,11 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
         )
         client.loop_start()
 
-        if not event.wait(timeout):
-            raise AsmokeDiscoveryError(
-                "Timed out while waiting for an Asmoke device status message"
-            )
+        if not connect_event.wait(10):
+            raise AsmokeConnectionError("Timed out while waiting for MQTT CONNACK")
+
+        if result["rc"] == 0:
+            disconnect_event.wait(timeout)
     except OSError as err:
         raise AsmokeConnectionError(str(err)) from err
     finally:
@@ -397,15 +571,15 @@ def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
     if result["error"] is not None:
         raise AsmokeConnectionError(f"Broker disconnected with rc={result['error']}")
 
-    if result["device_id"] is None:
+    discovered = _sorted_discovery_candidates(candidates)
+    if not discovered:
         raise AsmokeDiscoveryError("No Asmoke device was discovered")
 
-    payload = result["payload"]
-    return {
-        CONF_DEVICE_ID: result["device_id"],
-        "grill_type": _extract_grill_type(payload),
-        "firmware_version": _extract_firmware_version(payload),
-    }
+    return discovered
+
+
+def _discover_device(config: dict[str, Any], timeout: float) -> dict[str, Any]:
+    return _discover_devices(config, timeout)[0]
 
 
 class AsmokeMqttRuntime:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from homeassistant.components.number import NumberEntity, RestoreNumber
+from homeassistant.components.number import RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -112,4 +112,3 @@ class AsmokeQuickTargetTimeNumber(AsmokeQuickSettingNumber):
             return False
 
         return cook_active is True or bool(data.get("ignition_status"))
-

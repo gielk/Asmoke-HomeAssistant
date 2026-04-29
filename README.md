@@ -32,8 +32,9 @@ The current integration also includes a pit climate entity, Quick target time co
 5. Choose `Asmoke Cloud`.
 6. Read the prerequisites screen in the config flow before choosing a setup method.
 7. Choose `Auto-discover device ID` or `Enter device ID manually`.
-8. For auto discovery, make sure the smoker is powered on and the Asmoke app is open on a phone connected to the same local network as the smoker so the device publishes a fresh status message.
-9. Complete the config flow.
+8. For auto discovery, make sure the smoker is powered on and the Asmoke app is open on a phone connected to the same local network as the smoker so the device publishes fresh messages.
+9. Select the discovered device that belongs to your smoker.
+10. Complete the config flow.
 
 Note: host, port, and keepalive are prefilled with the known cloud defaults. The required MQTT username and password are intentionally not included in the public repository. If those values are not already available locally through `local_auth.json` or environment variables, contact the maintainer directly for setup help.
 
@@ -46,7 +47,7 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.2`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.3`.
 
 The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 
@@ -78,5 +79,3 @@ Run the component test suite locally with:
 ```bash
 python -m pytest tests/components/asmoke_cloud -q
 ```
-
-

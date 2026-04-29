@@ -36,6 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AsmokeConfigEntry) -> bo
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AsmokeConfigEntry) -> bool:
+    from .coordinator import AsmokeDataUpdateCoordinator
+
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not unloaded:
