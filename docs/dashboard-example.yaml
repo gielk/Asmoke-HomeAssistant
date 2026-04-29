@@ -6,7 +6,25 @@ views:
       - type: markdown
         content: |
           ## Asmoke Backyard
-          Use the climate card for smoke or quick and adjust `Quick target time` live during an active Quick cook.
+          Use the custom Asmoke card for daily control. The entity cards below remain useful for detailed checks and experiments.
+
+      - type: custom:asmoke-smoker-card
+        climate: climate.asmoke_backyard_pit_thermostat
+        name: Asmoke Backyard
+
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:asmoke-smoker-history-card
+            climate: climate.asmoke_backyard_pit_thermostat
+            name: Temperature history
+            hours_to_show: 6
+
+          - type: custom:asmoke-smoker-session-card
+            climate: climate.asmoke_backyard_pit_thermostat
+            name: Cook sessions
+            hours_to_show: 24
 
       - type: grid
         columns: 2
@@ -116,17 +134,3 @@ views:
           - entity: sensor.asmoke_backyard_battery_level
           - entity: sensor.asmoke_backyard_roast_progress
           - entity: sensor.asmoke_backyard_last_result_message
-
-      - type: history-graph
-        title: Temperature history
-        hours_to_show: 2
-        refresh_interval: 30
-        entities:
-          - entity: sensor.asmoke_backyard_grill_temperature_1
-            name: Grill 1
-          - entity: sensor.asmoke_backyard_grill_temperature_2
-            name: Grill 2
-          - entity: sensor.asmoke_backyard_probe_a_temperature
-            name: Probe A
-          - entity: sensor.asmoke_backyard_probe_b_temperature
-            name: Probe B

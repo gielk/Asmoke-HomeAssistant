@@ -6,6 +6,12 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4-beta.4 - 2026-04-29
+
+- Added included Asmoke dashboard cards with tile-style live telemetry, BBQ-style temperature history, cook session history, Quick controls, and start/stop actions.
+- Registered the custom cards as a Home Assistant frontend module and documented the manual dashboard resource fallback.
+- Fixed relative documentation links inside the `docs` folder so GitHub no longer resolves them as `docs/docs/...`.
+
 ## v0.4.4-beta.3 - 2026-04-29
 
 - Changed auto discovery so it collects candidate Asmoke devices and asks the user to confirm the correct one before creating the integration entry.

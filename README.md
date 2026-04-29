@@ -41,13 +41,14 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 ## Documentation
 
 - Full setup and usage guide: [docs/user-guide.md](docs/user-guide.md)
+- Included Asmoke dashboard cards: [docs/custom-card.md](docs/custom-card.md)
 - Copyable Lovelace dashboard example: [docs/dashboard-example.md](docs/dashboard-example.md)
 - Automation, script, and notification examples: [docs/automation-examples.md](docs/automation-examples.md)
 - Current feature scope: [docs/first-version.md](docs/first-version.md)
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.3`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.4`.
 
 The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 

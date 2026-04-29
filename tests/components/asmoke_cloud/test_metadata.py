@@ -17,6 +17,18 @@ def test_brand_assets_exist_for_hacs_and_home_assistant() -> None:
     assert (brand_dir / "logo@2x.png").is_file()
 
 
+def test_frontend_card_asset_is_shipped() -> None:
+    card_path = _integration_dir() / "frontend" / "asmoke-smoker-card.js"
+    assert card_path.is_file()
+
+    card_source = card_path.read_text()
+    assert "asmoke-smoker-card" in card_source
+    assert "asmoke-smoker-history-card" in card_source
+    assert "asmoke-smoker-session-card" in card_source
+    assert "window.customCards" in card_source
+    assert "customElements.define" in card_source
+
+
 def test_icons_json_defines_custom_entity_icons() -> None:
     icons_path = _integration_dir() / "icons.json"
     icons = json.loads(icons_path.read_text())
