@@ -64,7 +64,7 @@ Note: the required MQTT username and password are intentionally not included in 
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.7`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.8`.
 
 Beta prereleases remain available for testing when prereleases are enabled in HACS.
 

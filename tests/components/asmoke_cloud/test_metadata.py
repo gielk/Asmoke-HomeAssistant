@@ -28,6 +28,8 @@ def test_frontend_card_asset_is_shipped() -> None:
     assert "hide_offline_data" in card_source
     assert "hide_disconnected_probes" in card_source
     assert "offline_hide_after" in card_source
+    assert ".hide-offline-data .offline-data" in card_source
+    assert "display: none" in card_source
     assert "window.customCards" in card_source
     assert "customElements.define" in card_source
 

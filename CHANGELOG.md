@@ -6,6 +6,12 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.8 - 2026-04-30
+
+- Made the included live smoker card shrink dynamically when offline live data is hidden instead of reserving space for invisible sections.
+- Adjusted the live smoker card size estimate so Home Assistant layouts can use a smaller card height when offline data or disconnected probe tiles are hidden.
+- Updated the custom-card documentation and metadata test coverage for the dynamic height behavior.
+
 ## v0.4.7 - 2026-04-30
 
 - Removed device ID auto-selection from onboarding. Setup now requires the user to copy the smoker device ID from the Asmoke app under `Me -> Device`.

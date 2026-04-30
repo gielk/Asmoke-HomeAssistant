@@ -1,4 +1,4 @@
-const ASMOKE_SMOKER_CARD_VERSION = "0.4.1";
+const ASMOKE_SMOKER_CARD_VERSION = "0.4.2";
 const ASMOKE_SMOKER_CARD_TAG = "asmoke-smoker-card";
 const ASMOKE_SMOKER_CARD_EDITOR_TAG = "asmoke-smoker-card-editor";
 const ASMOKE_HISTORY_CARD_TAG = "asmoke-smoker-history-card";
@@ -468,6 +468,16 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   getCardSize() {
+    if (this._offlineHide?.hidden) {
+      return 2;
+    }
+    if (
+      this._config.hide_disconnected_probes === true &&
+      this._number(this._entities.probe_a_temp) === null &&
+      this._number(this._entities.probe_b_temp) === null
+    ) {
+      return 5;
+    }
     return 6;
   }
 
@@ -1111,7 +1121,7 @@ class AsmokeSmokerCard extends HTMLElement {
         }
 
         .hide-offline-data .offline-data {
-          visibility: hidden;
+          display: none;
           pointer-events: none;
         }
 

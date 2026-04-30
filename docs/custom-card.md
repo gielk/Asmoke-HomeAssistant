@@ -56,14 +56,17 @@ Home Assistant entity states. When enabled, the live card keeps the last values
 it saw while the dashboard is open and the smoker is only briefly offline. After
 `offline_hide_after` seconds with `Broker connected` off, `Device online` off,
 or the pit thermostat unavailable, the live value sections become invisible
-while the card keeps its layout and the header still shows the offline status.
+and the card collapses to a compact header with the offline status. When the
+smoker comes back online, the card expands again to fit the visible controls and
+temperature tiles.
 Set `offline_hide_after: 0` to hide live values immediately when the offline
 state is detected.
 
 By default, `hide_disconnected_probes` is `false`, so Probe A and Probe B keep
 their tiles and show `--` when a probe is not plugged in. Enable
 `hide_disconnected_probes` to remove unavailable probe tiles from the live card
-while leaving Grill 1 and Grill 2 visible.
+while leaving Grill 1 and Grill 2 visible. The card height follows the visible
+tile rows, so it is shorter when disconnected probe tiles are hidden.
 
 ### Asmoke Temperature History
 
