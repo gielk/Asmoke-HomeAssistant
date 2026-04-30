@@ -43,7 +43,7 @@ The repository currently has:
 
 - component tests through `pytest-homeassistant-custom-component`;
 - a GitHub Actions workflow that runs `pytest`;
-- documentation for onboarding, local auth, troubleshooting, and release history.
+- documentation for onboarding, dashboard cards, troubleshooting, and release history.
 
 ## Logical next steps
 

@@ -1,8 +1,0 @@
-{
-  "host": "47.253.1.220",
-  "port": 1883,
-  "username": "<mqtt_username>",
-  "password": "<mqtt_password>",
-  "keepalive": 60,
-  "name": "Asmoke Smoker"
-}

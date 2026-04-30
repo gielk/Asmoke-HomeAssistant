@@ -104,6 +104,6 @@ The shortest useful route is a dedicated MQTT client inside a Home Assistant cus
 
 - Not every command payload has been validated yet.
 - Device onboarding is now implemented as manual input or temporary MQTT discovery of `device_id`.
-- Broker credentials still need to be known or prefilled locally.
+- Broker credentials still need to be known and entered in the Home Assistant config flow.
 - Secrets and exact device identifiers stay out of this repository.
 - A local MITM or sniffing helper is optional, but not a good primary runtime architecture.

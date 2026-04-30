@@ -62,9 +62,6 @@ ATTR_PROBE_TEMP = "probe_temp"
 ATTR_TARGET_TEMP = "target_temp"
 ATTR_TARGET_TIME = "target_time"
 
-LOCAL_AUTH_FILE = "local_auth.json"
-LOCAL_AUTH_CONFIG_FILE = f"{DOMAIN}_local_auth.json"
-
 SENSITIVE_KEYS = {
     CONF_PASSWORD,
     CONF_USERNAME,

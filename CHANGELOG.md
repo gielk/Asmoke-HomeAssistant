@@ -6,6 +6,13 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.5-beta.1 - 2026-04-30
+
+- Removed the optional local credential file and environment-variable prefilling path from onboarding, so broker credentials are always entered through the Home Assistant config flow.
+- Reordered onboarding to validate MQTT credentials first, then let the user choose auto discovery or manual device ID entry.
+- Removed the blocking local auth file read path that could trigger Home Assistant event-loop warnings during setup.
+- Updated user-facing documentation and config-flow tests for the new onboarding flow.
+
 ## v0.4.4 - 2026-04-30
 
 This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes.

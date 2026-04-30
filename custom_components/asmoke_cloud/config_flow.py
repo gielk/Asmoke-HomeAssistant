@@ -26,7 +26,6 @@ from .const import (
     DEFAULT_OFFLINE_TIMEOUT,
     DOMAIN,
 )
-from .local_auth import has_local_auth_defaults, merge_connection_input
 from .mqtt import (
     AsmokeAuthenticationError,
     AsmokeConnectionError,
@@ -38,6 +37,34 @@ from .mqtt import (
 
 def _string_default(value: Any, fallback: str = "") -> str:
     return fallback if value is None else str(value)
+
+
+def _int_default(value: Any, fallback: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _connection_defaults(values: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    values = values or {}
+    return {
+        CONF_NAME: _string_default(values.get(CONF_NAME)),
+        CONF_HOST: _string_default(values.get(CONF_HOST), DEFAULT_BROKER_HOST),
+        CONF_PORT: _int_default(values.get(CONF_PORT), DEFAULT_BROKER_PORT),
+        CONF_USERNAME: _string_default(values.get(CONF_USERNAME)),
+        CONF_PASSWORD: _string_default(values.get(CONF_PASSWORD)),
+        CONF_KEEPALIVE: _int_default(values.get(CONF_KEEPALIVE), DEFAULT_KEEPALIVE),
+    }
+
+
+def _connection_config(values: Mapping[str, Any]) -> dict[str, Any]:
+    config = _connection_defaults(values)
+    config[CONF_NAME] = str(config[CONF_NAME]).strip()
+    config[CONF_HOST] = str(config[CONF_HOST]).strip()
+    config[CONF_USERNAME] = str(config[CONF_USERNAME]).strip()
+    config[CONF_PASSWORD] = str(config[CONF_PASSWORD])
+    return config
 
 
 def _candidate_label(candidate: Mapping[str, Any]) -> str:
@@ -68,39 +95,43 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
-        self._discovery_config: dict[str, Any] | None = None
+        self._connection_config: dict[str, Any] | None = None
         self._discovery_candidates: dict[str, dict[str, Any]] = {}
         self._reauth_entry: ConfigEntry | None = None
-
-    def _local_auth_status_text(self) -> str:
-        if has_local_auth_defaults(self.hass):
-            return (
-                "present on this Home Assistant instance; broker fields can be "
-                "prefilled automatically"
-            )
-
-        return (
-            "not present yet on this Home Assistant instance; broker fields will "
-            "not be prefilled automatically"
-        )
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
         return AsmokeOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        errors: dict[str, str] = {}
+        defaults = _connection_defaults(user_input)
+
         if user_input is not None:
-            return await self.async_step_setup_method()
+            connection_config = _connection_config(user_input)
+
+            try:
+                await async_validate_broker_connection(connection_config)
+            except AsmokeAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except AsmokeConnectionError:
+                errors["base"] = "cannot_connect"
+            else:
+                self._connection_config = connection_config
+                return await self.async_step_setup_method()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({}),
-            description_placeholders={"local_auth": self._local_auth_status_text()},
+            data_schema=self._connection_schema(defaults),
+            errors=errors,
         )
 
     async def async_step_setup_method(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        if self._connection_config is None:
+            return await self.async_step_user()
+
         return self.async_show_menu(
             step_id="setup_method",
             menu_options=["discover", "manual"],
@@ -109,14 +140,17 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discover(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        if self._connection_config is None:
+            return await self.async_step_user()
+
         errors: dict[str, str] = {}
-        defaults = merge_connection_input(user_input, self.hass)
 
         if user_input is not None:
-            merged = merge_connection_input(user_input, self.hass)
-
             try:
-                discovered = await async_discover_devices(merged, timeout=45.0)
+                discovered = await async_discover_devices(
+                    self._connection_config,
+                    timeout=45.0,
+                )
             except AsmokeAuthenticationError:
                 errors["base"] = "invalid_auth"
             except AsmokeDiscoveryError:
@@ -124,7 +158,6 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             except AsmokeConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                self._discovery_config = merged
                 self._discovery_candidates = {
                     str(candidate[CONF_DEVICE_ID]): candidate
                     for candidate in discovered
@@ -133,15 +166,14 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discover",
-            data_schema=self._discover_schema(defaults),
+            data_schema=vol.Schema({}),
             errors=errors,
-            description_placeholders={"local_auth": self._local_auth_status_text()},
         )
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        if self._discovery_config is None or not self._discovery_candidates:
+        if self._connection_config is None or not self._discovery_candidates:
             return await self.async_step_discover()
 
         errors: dict[str, str] = {}
@@ -151,7 +183,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_id not in self._discovery_candidates:
                 errors["base"] = "unknown_device"
             else:
-                merged = {**self._discovery_config, CONF_DEVICE_ID: device_id}
+                merged = {**self._connection_config, CONF_DEVICE_ID: device_id}
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
 
@@ -173,29 +205,24 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        if self._connection_config is None:
+            return await self.async_step_user()
+
         errors: dict[str, str] = {}
-        defaults = merge_connection_input(user_input, self.hass)
 
         if user_input is not None:
-            merged = merge_connection_input(user_input, self.hass)
-            await self.async_set_unique_id(str(merged[CONF_DEVICE_ID]))
+            device_id = str(user_input[CONF_DEVICE_ID]).strip()
+            merged = {**self._connection_config, CONF_DEVICE_ID: device_id}
+            await self.async_set_unique_id(device_id)
             self._abort_if_unique_id_configured()
 
-            try:
-                await async_validate_broker_connection(merged)
-            except AsmokeAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except AsmokeConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                title = str(merged.get(CONF_NAME) or f"Asmoke {merged[CONF_DEVICE_ID]}")
-                return self.async_create_entry(title=title, data=merged)
+            title = str(merged.get(CONF_NAME) or f"Asmoke {device_id}")
+            return self.async_create_entry(title=title, data=merged)
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=self._manual_schema(defaults),
+            data_schema=self._manual_schema(user_input or {}),
             errors=errors,
-            description_placeholders={"local_auth": self._local_auth_status_text()},
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
@@ -209,16 +236,10 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         errors: dict[str, str] = {}
-        defaults = merge_connection_input(
-            {**self._reauth_entry.data, **(user_input or {})},
-            self.hass,
-        )
+        defaults = _connection_defaults({**self._reauth_entry.data, **(user_input or {})})
 
         if user_input is not None:
-            merged = merge_connection_input(
-                {**self._reauth_entry.data, **user_input},
-                self.hass,
-            )
+            merged = _connection_config({**self._reauth_entry.data, **user_input})
 
             try:
                 await async_validate_broker_connection(merged)
@@ -240,7 +261,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _discover_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _connection_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
         return vol.Schema(
             {
                 vol.Optional(
@@ -289,31 +310,7 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_DEVICE_ID,
                     default=_string_default(defaults.get(CONF_DEVICE_ID)),
-                ): str,
-                vol.Optional(
-                    CONF_NAME,
-                    default=_string_default(defaults.get(CONF_NAME)),
-                ): str,
-                vol.Required(
-                    CONF_HOST,
-                    default=_string_default(defaults.get(CONF_HOST), DEFAULT_BROKER_HOST),
-                ): str,
-                vol.Required(
-                    CONF_PORT,
-                    default=int(defaults.get(CONF_PORT, DEFAULT_BROKER_PORT)),
-                ): int,
-                vol.Required(
-                    CONF_USERNAME,
-                    default=_string_default(defaults.get(CONF_USERNAME)),
-                ): str,
-                vol.Required(
-                    CONF_PASSWORD,
-                    default=_string_default(defaults.get(CONF_PASSWORD)),
-                ): str,
-                vol.Required(
-                    CONF_KEEPALIVE,
-                    default=int(defaults.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)),
-                ): int,
+                ): vol.All(str, vol.Length(min=1)),
             }
         )
 

@@ -30,8 +30,6 @@ custom_components/
     services.py
     services.yaml
     diagnostics.py
-    local_auth.py
-    local_auth.json.example
     brand/
       icon.png
       icon@2x.png
@@ -56,14 +54,14 @@ tests/
 
 ## Config flow
 
-The config flow currently offers two routes:
+The config flow starts by asking for the MQTT broker settings and validating that Home Assistant can log in to the Asmoke broker. After that, it offers two routes:
 
 1. `discover`
 2. `manual`
 
 For `discover`, Home Assistant temporarily logs in to the broker and listens on the known Asmoke device topics with a single-level wildcard to collect candidate `device_id` values. The user then confirms which discovered candidate belongs to the smoker before the config entry is created. For `manual`, the user enters the `device_id` directly.
 
-In the current version both routes ask for broker host, port, username, password, and keepalive, unless those values are already prefilled through local auth or environment variables.
+The broker host, port, username, password, keepalive, and optional display name are collected once before the route choice. Discovery and manual setup then only decide how the smoker `device_id` is selected.
 
 ## Reauth and options
 
@@ -112,12 +110,8 @@ Diagnostics include runtime and payload information, but redact sensitive values
 
 ## Security boundary
 
-The public repository does not contain live broker secrets. For local prefilling, the integration supports:
-
-- `custom_components/asmoke_cloud/local_auth.json`;
-- `asmoke_cloud_local_auth.json` in the Home Assistant config root;
-- environment variables such as `ASMOKE_CLOUD_USERNAME` and `ASMOKE_CLOUD_PASSWORD`.
+The public repository does not contain live broker secrets. The integration no longer reads local credential files or environment variables for onboarding; users enter broker credentials through the Home Assistant config flow, and diagnostics redact sensitive values such as username, password, and client ID.
 
 ## Main limitation of the current architecture
 
-Onboarding is currently semi-automatic: `device_id` discovery works, but broker credentials still need to be known or prefilled locally. No usable local LAN integration has been found that fully replaces this model.
+Onboarding is semi-automatic: `device_id` discovery works after valid broker credentials are entered, but those broker credentials still need to be known. No usable local LAN integration has been found that fully replaces this model.

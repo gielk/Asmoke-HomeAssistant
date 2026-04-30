@@ -4,19 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to Asmoke Cloud",
-        "description": "Before continuing, note that the MQTT username and password are intentionally not stored in the public repository. If those values are not already prefilled locally, contact the maintainer directly for setup help instead of searching the repo. Local auth status: {local_auth}\n\nAuto discovery only learns the device ID after Home Assistant can log in to the broker. For the best chance of discovery, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes a fresh status message. Click Next to choose a setup method."
-      },
-      "setup_method": {
-        "title": "Choose setup method",
-        "description": "Choose auto discovery if you already have working broker credentials and want Home Assistant to learn the device ID. Choose manual setup if you already know the device ID.",
-        "menu_options": {
-          "discover": "Auto-discover device ID",
-          "manual": "Enter device ID manually"
-        }
-      },
-      "discover": {
-        "title": "Discover Asmoke device",
-        "description": "Home Assistant will temporarily listen for Asmoke messages for about 45 seconds to find candidate device IDs after logging in to the MQTT broker. This step still requires working broker credentials, and those credentials are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help.\n\nBefore continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes fresh messages. If local auth defaults are present, the broker fields are prefilled automatically. Local auth status: {local_auth}",
+        "description": "Enter the Asmoke MQTT broker settings first. Home Assistant validates these credentials before asking how to identify your smoker. The MQTT username and password are intentionally not stored in the public repository; contact the maintainer directly for setup help if you do not already have them.",
         "data": {
           "name": "Display name",
           "host": "MQTT host",
@@ -25,6 +13,18 @@
           "password": "MQTT password",
           "keepalive": "MQTT keepalive"
         }
+      },
+      "setup_method": {
+        "title": "Choose setup method",
+        "description": "Choose auto discovery to let Home Assistant listen for candidate Asmoke devices, or enter the device ID manually if you already know it.",
+        "menu_options": {
+          "discover": "Auto-discover device ID",
+          "manual": "Enter device ID manually"
+        }
+      },
+      "discover": {
+        "title": "Discover Asmoke device",
+        "description": "Home Assistant will listen for Asmoke messages for about 45 seconds using the MQTT credentials you just entered. Before continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes fresh messages."
       },
       "confirm_discovery": {
         "title": "Confirm discovered Asmoke device",
@@ -35,15 +35,9 @@
       },
       "manual": {
         "title": "Enter device ID manually",
-        "description": "Enter your Asmoke device ID together with working MQTT broker credentials. The broker username and password are intentionally not published in the repository. If you do not already have them in a local auth file, contact the maintainer directly for setup help. If local auth defaults are present, the fields are prefilled automatically. Local auth status: {local_auth}",
+        "description": "Enter the Asmoke device ID for this smoker. The MQTT credentials were already validated in the previous step.",
         "data": {
-          "device_id": "Asmoke device ID",
-          "name": "Display name",
-          "host": "MQTT host",
-          "port": "MQTT port",
-          "username": "MQTT username",
-          "password": "MQTT password",
-          "keepalive": "MQTT keepalive"
+          "device_id": "Asmoke device ID"
         }
       },
       "reauth_confirm": {
@@ -61,7 +55,7 @@
     "error": {
       "cannot_connect": "Could not connect to the Asmoke MQTT broker",
       "device_not_found": "No Asmoke device message was received during discovery",
-      "invalid_auth": "Broker authentication failed. The public repository does not include working MQTT credentials.",
+      "invalid_auth": "Broker authentication failed. Check the MQTT username and password.",
       "unknown_device": "Choose one of the discovered Asmoke devices"
     },
     "abort": {

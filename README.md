@@ -48,13 +48,13 @@ For multiple smokers, select the smoker by Home Assistant device or climate enti
 3. Restart Home Assistant.
 4. Go to `Settings -> Devices & Services -> Add Integration`.
 5. Choose `Asmoke Cloud`.
-6. Read the prerequisites screen in the config flow before choosing a setup method.
+6. Enter the MQTT broker settings. Host, port, and keepalive are prefilled with the known cloud defaults.
 7. Choose `Auto-discover device ID` or `Enter device ID manually`.
 8. For auto discovery, make sure the smoker is powered on and the Asmoke app is open on a phone connected to the same local network as the smoker so the device publishes fresh messages.
-9. Select the discovered device that belongs to your smoker.
+9. Select the discovered device that belongs to your smoker, or enter the device ID manually.
 10. Complete the config flow.
 
-Note: host, port, and keepalive are prefilled with the known cloud defaults. The required MQTT username and password are intentionally not included in the public repository. If those values are not already available locally through `local_auth.json` or environment variables, contact the maintainer directly for setup help.
+Note: the required MQTT username and password are intentionally not included in the public repository. Enter them during onboarding. If you do not already have those values, contact the maintainer directly for setup help.
 
 ## Documentation
 
@@ -66,7 +66,7 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.4`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.4`. The current beta release is `v0.4.5-beta.1`.
 
 Beta prereleases remain available for testing when prereleases are enabled in HACS.
 
@@ -80,18 +80,6 @@ Release history is available in [CHANGELOG.md](CHANGELOG.md).
 - Tests: [tests/components/asmoke_cloud](tests/components/asmoke_cloud)
 - Research summary: [docs/research-summary.md](docs/research-summary.md)
 - Architecture notes: [docs/integration-architecture.md](docs/integration-architecture.md)
-
-## Local auth defaults
-
-For local use you can prefill broker credentials through a local file or environment variables. Use [custom_components/asmoke_cloud/local_auth.json.example](custom_components/asmoke_cloud/local_auth.json.example).
-
-Supported locations:
-
-1. `custom_components/asmoke_cloud/local_auth.json`
-2. `asmoke_cloud_local_auth.json` in the Home Assistant config root
-3. Environment variables such as `ASMOKE_CLOUD_USERNAME` and `ASMOKE_CLOUD_PASSWORD`
-
-These local files do not belong in Git.
 
 ## Tests
 

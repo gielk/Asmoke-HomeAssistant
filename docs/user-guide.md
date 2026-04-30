@@ -10,12 +10,12 @@ You need:
 
 - Home Assistant `2025.1.0` or newer;
 - HACS or a manual custom component installation;
-- the broker credentials for your Asmoke device, or those values prefilled locally;
+- the MQTT broker credentials for your Asmoke device;
 - internet access from Home Assistant to the Asmoke broker.
 
 The grill does not need to be powered on to install the integration. If the grill is off, the integration will still load, but no live telemetry updates will come in.
 
-Important: the MQTT username and password are intentionally not stored in the public repository. If they are not already available in a private local auth file, contact the maintainer directly for setup help.
+Important: the MQTT username and password are intentionally not stored in the public repository. Enter them during onboarding. If you do not already have those values, contact the maintainer directly for setup help.
 
 ## Installation via HACS
 
@@ -45,28 +45,24 @@ The repository includes the following documentation for the current entity set:
 2. Go to `Settings -> Devices & Services`.
 3. Click `Add Integration`.
 4. Choose `Asmoke Cloud`.
-5. Read the prerequisites screen in the config flow.
-6. Choose one of these routes:
-  `Auto-discover device ID`
-  `Enter device ID manually`
+5. Enter the MQTT broker settings. Host, port, and keepalive are prefilled with known cloud defaults; username and password must be entered by you.
+6. After Home Assistant validates the broker connection, choose one of these routes:
+   - `Auto-discover device ID`
+   - `Enter device ID manually`
 7. For auto discovery:
-  optionally enter a name;
-  verify host, port, username, password, and keepalive;
-  turn on the smoker;
-  open the Asmoke app on a phone connected to the same local network as the smoker;
-  wait for Home Assistant to collect candidate Asmoke devices for about 45 seconds;
-  select the discovered device that belongs to your smoker.
+   - turn on the smoker;
+   - open the Asmoke app on a phone connected to the same local network as the smoker;
+   - wait for Home Assistant to collect candidate Asmoke devices for about 45 seconds;
+   - select the discovered device that belongs to your smoker.
 8. For manual entry:
-  enter `device_id`;
-  optionally enter a name;
-  verify host, port, username, password, and keepalive.
+   - enter `device_id`.
 9. Complete the config flow.
 
 ## Where do these values come from?
 
-You do not get these values from Home Assistant itself. In practice, the required connection details need to come from a private local auth file, prior setup information you already have, or direct setup help from the maintainer.
+You do not get these values from Home Assistant itself. In practice, the required connection details need to come from prior setup information you already have or direct setup help from the maintainer.
 
-In practice you need the following values:
+In practice the integration needs the following values. The `device_id` can be entered manually or discovered after the broker credentials are accepted.
 
 - `device_id`
 - `host`
@@ -75,38 +71,11 @@ In practice you need the following values:
 - `password`
 - `keepalive`
 
-If you already captured or stored those values, the easiest route is to prefill them locally through a `local_auth.json` file so you do not have to type them manually in the config flow.
-
 If you do not have them yet, do not expect to find them in the public repository. The intended path is to request setup help from the maintainer instead of trying to discover public credentials in the repo.
 
 The integration can try to discover `device_id` automatically by temporarily listening for Asmoke device messages, but that only works if Home Assistant can already log in with valid broker credentials. Discovery shows candidates for confirmation before creating the config entry.
 
-This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. If you already have those values privately, you can prefill them locally and let discovery learn only the `device_id`.
-
-## Optional local prefilling
-
-If you do not want to enter the broker credentials every time, you can use a local file that stays out of Git.
-
-Use this as a base:
-
-- `custom_components/asmoke_cloud/local_auth.json.example`
-
-`device_id` is optional in this file if you want to use discovery.
-
-Supported locations:
-
-1. `custom_components/asmoke_cloud/local_auth.json`
-2. `asmoke_cloud_local_auth.json` in the Home Assistant config root
-
-Supported environment variables:
-
-- `ASMOKE_CLOUD_HOST`
-- `ASMOKE_CLOUD_PORT`
-- `ASMOKE_CLOUD_USERNAME`
-- `ASMOKE_CLOUD_PASSWORD`
-- `ASMOKE_CLOUD_KEEPALIVE`
-- `ASMOKE_CLOUD_DEVICE_ID`
-- `ASMOKE_CLOUD_NAME`
+This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. The integration no longer reads local credential files or environment variables during onboarding; enter the broker settings in the Home Assistant config flow.
 
 ## What gets created
 
