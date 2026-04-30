@@ -16,7 +16,7 @@
       },
       "setup_method": {
         "title": "Choose setup method",
-        "description": "Choose auto discovery to let Home Assistant listen for candidate Asmoke devices, or enter the device ID manually if you already know it.",
+        "description": "Use auto discovery first when your smoker is online and can publish a fresh message. Use manual entry if discovery does not find your smoker, or if you already copied the device ID from the Asmoke app under Me -> Device.",
         "menu_options": {
           "discover": "Auto-discover device ID",
           "manual": "Enter device ID manually"
@@ -24,7 +24,7 @@
       },
       "discover": {
         "title": "Discover Asmoke device",
-        "description": "Home Assistant will listen for Asmoke messages for about 45 seconds using the MQTT credentials you just entered. Before continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes fresh messages."
+        "description": "Home Assistant will listen for Asmoke messages for about 45 seconds using the MQTT credentials you just entered. Before continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes fresh messages. If discovery does not find your smoker, go back and use manual entry; the device ID is shown in the Asmoke app under Me -> Device."
       },
       "confirm_discovery": {
         "title": "Confirm discovered Asmoke device",
@@ -35,7 +35,7 @@
       },
       "manual": {
         "title": "Enter device ID manually",
-        "description": "Enter the Asmoke device ID for this smoker. The MQTT credentials were already validated in the previous step.",
+        "description": "Enter the Asmoke device ID for this smoker. You can find it in the Asmoke app under Me -> Device. Manual entry is useful when auto discovery does not find the smoker or when you already copied the device ID from the app.",
         "data": {
           "device_id": "Asmoke device ID"
         }
@@ -54,7 +54,7 @@
     },
     "error": {
       "cannot_connect": "Could not connect to the Asmoke MQTT broker",
-      "device_not_found": "No Asmoke device message was received during discovery",
+      "device_not_found": "No Asmoke device message was received during discovery. You can use manual entry and copy the device ID from the Asmoke app under Me -> Device.",
       "invalid_auth": "Broker authentication failed. Check the MQTT username and password.",
       "unknown_device": "Choose one of the discovered Asmoke devices"
     },

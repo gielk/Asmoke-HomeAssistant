@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.5-beta.2 - 2026-04-30
+
+- Clarified when to use auto discovery versus manual device ID entry during onboarding.
+- Documented that the device ID can be copied from the Asmoke app under `Me -> Device` when discovery does not find the smoker.
+
 ## v0.4.5-beta.1 - 2026-04-30
 
 - Removed the optional local credential file and environment-variable prefilling path from onboarding, so broker credentials are always entered through the Home Assistant config flow.

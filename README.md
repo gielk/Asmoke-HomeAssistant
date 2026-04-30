@@ -51,7 +51,7 @@ For multiple smokers, select the smoker by Home Assistant device or climate enti
 6. Enter the MQTT broker settings. Host, port, and keepalive are prefilled with the known cloud defaults.
 7. Choose `Auto-discover device ID` or `Enter device ID manually`.
 8. For auto discovery, make sure the smoker is powered on and the Asmoke app is open on a phone connected to the same local network as the smoker so the device publishes fresh messages.
-9. Select the discovered device that belongs to your smoker, or enter the device ID manually.
+9. Select the discovered device that belongs to your smoker. If discovery does not find it, choose manual entry and copy the device ID from the Asmoke app under `Me -> Device`.
 10. Complete the config flow.
 
 Note: the required MQTT username and password are intentionally not included in the public repository. Enter them during onboarding. If you do not already have those values, contact the maintainer directly for setup help.
@@ -66,7 +66,7 @@ Note: the required MQTT username and password are intentionally not included in 
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.4`. The current beta release is `v0.4.5-beta.1`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.4`. The current beta release is `v0.4.5-beta.2`.
 
 Beta prereleases remain available for testing when prereleases are enabled in HACS.
 

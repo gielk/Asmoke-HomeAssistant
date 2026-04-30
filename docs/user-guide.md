@@ -55,7 +55,10 @@ The repository includes the following documentation for the current entity set:
    - wait for Home Assistant to collect candidate Asmoke devices for about 45 seconds;
    - select the discovered device that belongs to your smoker.
 8. For manual entry:
-   - enter `device_id`.
+   - open the Asmoke app;
+   - go to `Me -> Device`;
+   - copy the value shown as `Device ID`;
+   - enter that value in Home Assistant.
 9. Complete the config flow.
 
 ## Where do these values come from?
@@ -73,7 +76,9 @@ In practice the integration needs the following values. The `device_id` can be e
 
 If you do not have them yet, do not expect to find them in the public repository. The intended path is to request setup help from the maintainer instead of trying to discover public credentials in the repo.
 
-The integration can try to discover `device_id` automatically by temporarily listening for Asmoke device messages, but that only works if Home Assistant can already log in with valid broker credentials. Discovery shows candidates for confirmation before creating the config entry.
+The integration can try to discover `device_id` automatically by temporarily listening for Asmoke device messages, but that only works if Home Assistant can already log in with valid broker credentials and the smoker publishes a fresh message during discovery. Discovery shows candidates for confirmation before creating the config entry.
+
+Use manual device ID entry when discovery does not find the smoker, when the smoker is offline, or when you already have the ID from the Asmoke app. In the app, open `Me -> Device`; the device card shows `Device ID` and usually includes a copy button next to it.
 
 This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. The integration no longer reads local credential files or environment variables during onboarding; enter the broker settings in the Home Assistant config flow.
 
