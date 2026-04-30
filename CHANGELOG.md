@@ -6,6 +6,17 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.4 - 2026-04-30
+
+This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes.
+
+- Added included Asmoke dashboard cards for daily smoker use: live pit control, Quick target time, start/stop actions, grill and probe temperature tiles, BBQ-style temperature history, and cook session history.
+- Made the dashboard cards easier to add by auto-selecting the only configured Asmoke smoker, supporting `device_id`, and resolving related entities from the same Home Assistant device so renamed entities keep working more reliably.
+- Registered the dashboard cards as a Home Assistant frontend module, with documented manual resource fallback for dashboards that do not load the module automatically.
+- Improved onboarding by adding a clearer prerequisites step and changing MQTT auto discovery to collect candidate Asmoke devices and ask the user to confirm the correct smoker before creating the integration entry.
+- Added Home Assistant entity icon translations and local HACS/Home Assistant brand assets for a more polished integration UI.
+- Expanded the public documentation with zero-config dashboard setup guidance, troubleshooting notes, a dashboard preview image, updated dashboard examples, and fixed relative links inside the `docs` folder.
+
 ## v0.4.4-beta.5 - 2026-04-29
 
 - Improved the dashboard cards so `climate` is no longer required when Home Assistant has a single Asmoke smoker, and added device-level entity resolution for renamed entities.

@@ -54,9 +54,6 @@ For multiple smokers, select the smoker by Home Assistant device or climate enti
 9. Select the discovered device that belongs to your smoker.
 10. Complete the config flow.
 
-For beta releases, enable prereleases/beta versions in HACS before selecting
-the newest beta.
-
 Note: host, port, and keepalive are prefilled with the known cloud defaults. The required MQTT username and password are intentionally not included in the public repository. If those values are not already available locally through `local_auth.json` or environment variables, contact the maintainer directly for setup help.
 
 ## Documentation
@@ -69,7 +66,9 @@ Note: host, port, and keepalive are prefilled with the known cloud defaults. The
 
 ## Releases
 
-This repository uses semantic version releases for HACS. The latest stable release is `v0.4.3`, and the current beta release is `v0.4.4-beta.5`.
+This repository uses semantic version releases for HACS. The latest stable release is `v0.4.4`.
+
+Beta prereleases remain available for testing when prereleases are enabled in HACS.
 
 The `main` branch may already contain features that have not been released yet. Check the top section of `CHANGELOG.md` for current unreleased work.
 
