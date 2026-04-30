@@ -6,6 +6,11 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.6 - 2026-04-30
+
+- Added optional live dashboard-card hiding for stale smoker data after the broker or device has been offline for a configurable delay.
+- Documented the new `hide_offline_data` and `offline_hide_after` options for the included live smoker card.
+
 ## v0.4.5 - 2026-04-30
 
 This stable release combines the `v0.4.5-beta.1` and `v0.4.5-beta.2` changes.

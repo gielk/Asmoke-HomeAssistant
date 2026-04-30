@@ -42,6 +42,23 @@ type: custom:asmoke-smoker-card
 Shows live pit control, Quick target time, start/stop buttons, grill and probe
 temperature tiles, broker/device/Wi-Fi status, battery, and last result.
 
+Optional stale/offline display behavior:
+
+```yaml
+type: custom:asmoke-smoker-card
+hide_offline_data: true
+offline_hide_after: 600
+```
+
+By default, `hide_offline_data` is `false`, so the card keeps showing the normal
+Home Assistant entity states. When enabled, the live card keeps the last values
+it saw while the dashboard is open and the smoker is only briefly offline. After
+`offline_hide_after` seconds with `Broker connected` off, `Device online` off,
+or the pit thermostat unavailable, the live value sections become invisible
+while the card keeps its layout and the header still shows the offline status.
+Set `offline_hide_after: 0` to hide live values immediately when the offline
+state is detected.
+
 ### Asmoke Temperature History
 
 ```yaml

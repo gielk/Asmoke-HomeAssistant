@@ -1,4 +1,4 @@
-const ASMOKE_SMOKER_CARD_VERSION = "0.3.0";
+const ASMOKE_SMOKER_CARD_VERSION = "0.4.0";
 const ASMOKE_SMOKER_CARD_TAG = "asmoke-smoker-card";
 const ASMOKE_SMOKER_CARD_EDITOR_TAG = "asmoke-smoker-card-editor";
 const ASMOKE_HISTORY_CARD_TAG = "asmoke-smoker-history-card";
@@ -7,6 +7,7 @@ const ASMOKE_SESSION_CARD_TAG = "asmoke-smoker-session-card";
 const ASMOKE_SESSION_CARD_EDITOR_TAG = "asmoke-smoker-session-card-editor";
 
 const ASMOKE_UNAVAILABLE_STATES = new Set(["unknown", "unavailable", "", null, undefined]);
+const ASMOKE_DEFAULT_OFFLINE_HIDE_AFTER = 600;
 
 const ASMOKE_ENTITY_KEYS = [
   "climate",
@@ -37,6 +38,8 @@ const ASMOKE_EDITOR_LABELS = {
   cook_active: "Cook active",
   device_online: "Device online",
   broker_connected: "Broker connected",
+  hide_offline_data: "Hide live values when offline",
+  offline_hide_after: "Hide after",
 };
 
 const ASMOKE_ENTITY_DEFINITIONS = {
@@ -258,6 +261,69 @@ const buildAsmokeEntities = (config, hass) => {
   return entities;
 };
 
+const timestampMs = (value) => {
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
+const secondsConfig = (value, fallback) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : fallback;
+};
+
+const isOnState = (stateObj) => String(stateObj?.state ?? "").toLowerCase() === "on";
+
+const isUnavailableState = (stateObj) => ASMOKE_UNAVAILABLE_STATES.has(stateObj?.state);
+
+const offlineHideState = (config, hass, entities) => {
+  if (config?.hide_offline_data !== true) {
+    return { hidden: false, offline: false, useCache: false, remainingMs: null };
+  }
+
+  const hideAfterMs =
+    secondsConfig(config?.offline_hide_after, ASMOKE_DEFAULT_OFFLINE_HIDE_AFTER) * 1000;
+  const now = Date.now();
+  const checks = [
+    {
+      entity: entities?.broker_connected,
+      isOffline: (stateObj) => !isOnState(stateObj),
+    },
+    {
+      entity: entities?.device_online,
+      isOffline: (stateObj) => !isOnState(stateObj),
+    },
+    {
+      entity: entities?.climate,
+      isOffline: (stateObj) => isUnavailableState(stateObj),
+    },
+  ]
+    .map((check) => {
+      const stateObj = check.entity ? hass?.states?.[check.entity] : undefined;
+      if (!stateObj || !check.isOffline(stateObj)) {
+        return null;
+      }
+      const changedAt =
+        timestampMs(stateObj.last_changed) ??
+        timestampMs(stateObj.last_updated) ??
+        Number.NEGATIVE_INFINITY;
+      return Math.max(0, now - changedAt);
+    })
+    .filter((elapsedMs) => elapsedMs !== null);
+
+  if (!checks.length) {
+    return { hidden: false, offline: false, useCache: false, remainingMs: null };
+  }
+
+  const elapsedMs = Math.max(...checks);
+  const hidden = elapsedMs >= hideAfterMs;
+  return {
+    hidden,
+    offline: true,
+    useCache: !hidden,
+    remainingMs: hidden ? null : hideAfterMs - elapsedMs,
+  };
+};
+
 const historyState = (entry) => entry?.state ?? entry?.s;
 const historyAttributes = (entry) => entry?.attributes ?? entry?.a ?? {};
 
@@ -377,11 +443,19 @@ class AsmokeSmokerCard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._config = {};
     this._entities = {};
+    this._lastEntityStates = new Map();
+    this._offlineHide = { hidden: false, offline: false, useCache: false, remainingMs: null };
+    this._offlineRefreshTimer = undefined;
     this._handleClick = this._handleClick.bind(this);
   }
 
   setConfig(config) {
-    this._config = { ...(config ?? {}) };
+    this._config = {
+      hide_offline_data: false,
+      offline_hide_after: ASMOKE_DEFAULT_OFFLINE_HIDE_AFTER,
+      ...(config ?? {}),
+    };
+    this._lastEntityStates.clear();
     this._entities = this._buildEntities();
     this._render();
   }
@@ -396,11 +470,14 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   connectedCallback() {
+    this._connected = true;
     this.shadowRoot.addEventListener("click", this._handleClick);
     this._render();
   }
 
   disconnectedCallback() {
+    this._connected = false;
+    window.clearTimeout(this._offlineRefreshTimer);
     this.shadowRoot.removeEventListener("click", this._handleClick);
   }
 
@@ -416,6 +493,27 @@ class AsmokeSmokerCard extends HTMLElement {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
 
+  _cacheState(entityId, stateObj) {
+    if (!entityId || !this._isAvailable(stateObj)) {
+      return;
+    }
+    this._lastEntityStates.set(entityId, {
+      ...stateObj,
+      attributes: { ...(stateObj.attributes ?? {}) },
+    });
+  }
+
+  _displayState(entityId) {
+    const stateObj = this._state(entityId);
+    if (this._isAvailable(stateObj)) {
+      this._cacheState(entityId, stateObj);
+      return stateObj;
+    }
+    return this._offlineHide.useCache
+      ? this._lastEntityStates.get(entityId) || stateObj
+      : stateObj;
+  }
+
   _isAvailable(stateObj) {
     return Boolean(stateObj && !ASMOKE_UNAVAILABLE_STATES.has(stateObj.state));
   }
@@ -425,12 +523,12 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   _number(entityId) {
-    const numeric = Number(this._state(entityId)?.state);
+    const numeric = Number(this._displayState(entityId)?.state);
     return Number.isFinite(numeric) ? numeric : null;
   }
 
   _formatValue(entityId, fallback = "--") {
-    const stateObj = this._state(entityId);
+    const stateObj = this._displayState(entityId);
     if (!this._isAvailable(stateObj)) {
       return fallback;
     }
@@ -439,7 +537,7 @@ class AsmokeSmokerCard extends HTMLElement {
   }
 
   _formatTemp(entityId) {
-    const stateObj = this._state(entityId);
+    const stateObj = this._displayState(entityId);
     if (!this._isAvailable(stateObj)) {
       return "--";
     }
@@ -469,6 +567,9 @@ class AsmokeSmokerCard extends HTMLElement {
       return;
     }
     const climate = this._state(this._entities.climate);
+    this._offlineHide = offlineHideState(this._config, this._hass, this._entities);
+    this._scheduleOfflineHideRefresh();
+    const climateDisplay = this._displayState(this._entities.climate) || climate;
 
     if (!climate) {
       this._renderError(
@@ -479,20 +580,22 @@ class AsmokeSmokerCard extends HTMLElement {
     }
 
     const currentTemp = firstFinite(
-      climate.attributes?.current_temperature,
+      climateDisplay.attributes?.current_temperature,
       this._number(this._entities.grill_temp_1),
       this._number(this._entities.grill_temp_2),
     );
-    const targetTemp = Number(climate.attributes?.temperature);
-    const minTemp = Number(climate.attributes?.min_temp) || 0;
-    const maxTemp = Number(climate.attributes?.max_temp) || 300;
+    const targetTemp = Number(climateDisplay.attributes?.temperature);
+    const minTemp = Number(climateDisplay.attributes?.min_temp) || 0;
+    const maxTemp = Number(climateDisplay.attributes?.max_temp) || 300;
     const targetDisplay = Number.isFinite(targetTemp)
       ? `${Math.round(targetTemp)}\u00b0C`
       : "--";
     const currentDisplay = Number.isFinite(currentTemp)
       ? `${Math.round(currentTemp)}\u00b0`
       : "--";
-    const preset = climate.attributes?.preset_mode || this._state(this._entities.mode)?.state;
+    const preset =
+      climateDisplay.attributes?.preset_mode ||
+      this._displayState(this._entities.mode)?.state;
     const mode = this._formatMode(preset);
     const cookActive = this._isOn(this._entities.cook_active) || climate.state === "heat";
     const brokerConnected = this._isOn(this._entities.broker_connected);
@@ -504,13 +607,15 @@ class AsmokeSmokerCard extends HTMLElement {
     const lastResult = this._formatValue(this._entities.last_result, "No result yet");
     const title =
       this._config.name ||
-      climate.attributes?.friendly_name ||
+      climateDisplay.attributes?.friendly_name ||
       "Asmoke smoker";
 
     this.shadowRoot.innerHTML = `
       ${this._styles()}
       <ha-card>
-        <div class="card-shell ${html(statusClass)}">
+        <div class="card-shell ${html(statusClass)} ${
+          this._offlineHide.hidden ? "hide-offline-data" : ""
+        }">
           <header class="header">
             <button class="title-button" data-action="more-info" data-entity="${html(
               this._entities.climate,
@@ -527,7 +632,7 @@ class AsmokeSmokerCard extends HTMLElement {
             </span>
           </header>
 
-          <section class="summary">
+          <section class="summary offline-data">
             <button class="temperature-focus" data-action="more-info" data-entity="${html(
               this._entities.climate,
             )}">
@@ -546,7 +651,7 @@ class AsmokeSmokerCard extends HTMLElement {
             </div>
           </section>
 
-          <section class="control-panel">
+          <section class="control-panel offline-data">
             <div class="stepper">
               <span class="stepper-label">Target</span>
               <button data-action="temp-down" aria-label="Lower target temperature">
@@ -569,7 +674,7 @@ class AsmokeSmokerCard extends HTMLElement {
             </div>
           </section>
 
-          <section class="actions">
+          <section class="actions offline-data">
             <button class="action-button start" data-action="start-quick" ${
               brokerConnected ? "" : "disabled"
             }>
@@ -584,7 +689,7 @@ class AsmokeSmokerCard extends HTMLElement {
             </button>
           </section>
 
-          <section class="tiles">
+          <section class="tiles offline-data">
             ${this._temperatureTile(
               "Grill 1",
               this._entities.grill_temp_1,
@@ -615,7 +720,7 @@ class AsmokeSmokerCard extends HTMLElement {
             )}
           </section>
 
-          <section class="footer">
+          <section class="footer offline-data">
             ${this._statusChip("Broker", brokerConnected, "mdi:access-point-network")}
             ${this._statusChip("Device", deviceOnline, "mdi:wifi")}
             ${this._statusChip("Wi-Fi", this._isOn(this._entities.wifi_connected), "mdi:wifi-check")}
@@ -627,14 +732,14 @@ class AsmokeSmokerCard extends HTMLElement {
             </button>
           </section>
 
-          <button class="result-line" data-action="more-info" data-entity="${html(
+          <button class="result-line offline-data" data-action="more-info" data-entity="${html(
             this._entities.last_result,
           )}">
             <ha-icon icon="mdi:message-text-outline"></ha-icon>
             <span>${html(lastResult)}</span>
           </button>
 
-          <div class="heat-track" aria-hidden="true">
+          <div class="heat-track offline-data" aria-hidden="true">
             <span style="width: ${percent(currentTemp, maxTemp)}%"></span>
           </div>
         </div>
@@ -646,6 +751,17 @@ class AsmokeSmokerCard extends HTMLElement {
       track.style.width = `${percent(currentTemp, maxTemp)}%`;
     }
     this._setStepperState(minTemp, maxTemp, targetTemp);
+  }
+
+  _scheduleOfflineHideRefresh() {
+    window.clearTimeout(this._offlineRefreshTimer);
+    if (!this._connected || !Number.isFinite(this._offlineHide.remainingMs)) {
+      return;
+    }
+    this._offlineRefreshTimer = window.setTimeout(
+      () => this._render(),
+      Math.max(250, this._offlineHide.remainingMs + 50),
+    );
   }
 
   _renderError(title, detail) {
@@ -977,6 +1093,11 @@ class AsmokeSmokerCard extends HTMLElement {
 
         .offline .status-dot {
           background: var(--error-color, #d93025);
+        }
+
+        .hide-offline-data .offline-data {
+          visibility: hidden;
+          pointer-events: none;
         }
 
         .cooking .status-dot {
@@ -1332,6 +1453,18 @@ class AsmokeSmokerCardEditor extends HTMLElement {
       { name: "cook_active", selector: { entity: { domain: "binary_sensor" } } },
       { name: "device_online", selector: { entity: { domain: "binary_sensor" } } },
       { name: "broker_connected", selector: { entity: { domain: "binary_sensor" } } },
+      { name: "hide_offline_data", selector: { boolean: {} } },
+      {
+        name: "offline_hide_after",
+        selector: {
+          number: {
+            min: 0,
+            step: 30,
+            mode: "box",
+            unit_of_measurement: "s",
+          },
+        },
+      },
     ];
     form.computeLabel = (schema) => ASMOKE_EDITOR_LABELS[schema.name] ?? schema.name;
     form.addEventListener("value-changed", (event) => {

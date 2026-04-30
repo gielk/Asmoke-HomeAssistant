@@ -25,6 +25,8 @@ def test_frontend_card_asset_is_shipped() -> None:
     assert "asmoke-smoker-card" in card_source
     assert "asmoke-smoker-history-card" in card_source
     assert "asmoke-smoker-session-card" in card_source
+    assert "hide_offline_data" in card_source
+    assert "offline_hide_after" in card_source
     assert "window.customCards" in card_source
     assert "customElements.define" in card_source
 
