@@ -1,4 +1,4 @@
-const ASMOKE_SMOKER_CARD_VERSION = "0.4.0";
+const ASMOKE_SMOKER_CARD_VERSION = "0.4.1";
 const ASMOKE_SMOKER_CARD_TAG = "asmoke-smoker-card";
 const ASMOKE_SMOKER_CARD_EDITOR_TAG = "asmoke-smoker-card-editor";
 const ASMOKE_HISTORY_CARD_TAG = "asmoke-smoker-history-card";
@@ -39,6 +39,7 @@ const ASMOKE_EDITOR_LABELS = {
   device_online: "Device online",
   broker_connected: "Broker connected",
   hide_offline_data: "Hide live values when offline",
+  hide_disconnected_probes: "Hide disconnected probes",
   offline_hide_after: "Hide after",
 };
 
@@ -452,6 +453,7 @@ class AsmokeSmokerCard extends HTMLElement {
   setConfig(config) {
     this._config = {
       hide_offline_data: false,
+      hide_disconnected_probes: false,
       offline_hide_after: ASMOKE_DEFAULT_OFFLINE_HIDE_AFTER,
       ...(config ?? {}),
     };
@@ -609,6 +611,36 @@ class AsmokeSmokerCard extends HTMLElement {
       this._config.name ||
       climateDisplay.attributes?.friendly_name ||
       "Asmoke smoker";
+    const temperatureTiles = [
+      this._temperatureTile(
+        "Grill 1",
+        this._entities.grill_temp_1,
+        "mdi:grill",
+        maxTemp,
+        "hot",
+      ),
+      this._temperatureTile(
+        "Grill 2",
+        this._entities.grill_temp_2,
+        "mdi:grill-outline",
+        maxTemp,
+        "hot",
+      ),
+      this._probeTemperatureTile(
+        "Probe A",
+        this._entities.probe_a_temp,
+        "mdi:thermometer-lines",
+        120,
+        "probe",
+      ),
+      this._probeTemperatureTile(
+        "Probe B",
+        this._entities.probe_b_temp,
+        "mdi:thermometer-lines",
+        120,
+        "probe",
+      ),
+    ].join("");
 
     this.shadowRoot.innerHTML = `
       ${this._styles()}
@@ -690,34 +722,7 @@ class AsmokeSmokerCard extends HTMLElement {
           </section>
 
           <section class="tiles offline-data">
-            ${this._temperatureTile(
-              "Grill 1",
-              this._entities.grill_temp_1,
-              "mdi:grill",
-              maxTemp,
-              "hot",
-            )}
-            ${this._temperatureTile(
-              "Grill 2",
-              this._entities.grill_temp_2,
-              "mdi:grill-outline",
-              maxTemp,
-              "hot",
-            )}
-            ${this._temperatureTile(
-              "Probe A",
-              this._entities.probe_a_temp,
-              "mdi:thermometer-lines",
-              120,
-              "probe",
-            )}
-            ${this._temperatureTile(
-              "Probe B",
-              this._entities.probe_b_temp,
-              "mdi:thermometer-lines",
-              120,
-              "probe",
-            )}
+            ${temperatureTiles}
           </section>
 
           <section class="footer offline-data">
@@ -809,6 +814,16 @@ class AsmokeSmokerCard extends HTMLElement {
         <span class="tile-meter" aria-hidden="true"><span style="width: ${width}%"></span></span>
       </button>
     `;
+  }
+
+  _probeTemperatureTile(label, entityId, icon, max, tone) {
+    if (
+      this._config.hide_disconnected_probes === true &&
+      this._number(entityId) === null
+    ) {
+      return "";
+    }
+    return this._temperatureTile(label, entityId, icon, max, tone);
   }
 
   _statusChip(label, active, icon) {
@@ -1454,6 +1469,7 @@ class AsmokeSmokerCardEditor extends HTMLElement {
       { name: "device_online", selector: { entity: { domain: "binary_sensor" } } },
       { name: "broker_connected", selector: { entity: { domain: "binary_sensor" } } },
       { name: "hide_offline_data", selector: { boolean: {} } },
+      { name: "hide_disconnected_probes", selector: { boolean: {} } },
       {
         name: "offline_hide_after",
         selector: {

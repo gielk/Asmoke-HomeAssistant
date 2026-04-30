@@ -54,24 +54,27 @@ tests/
 
 ## Config flow
 
-The config flow starts by asking for the MQTT broker settings and validating that Home Assistant can log in to the Asmoke broker. After that, it offers two routes:
+The config flow starts by asking for the MQTT broker settings and validating that Home Assistant can log in to the Asmoke broker. After that, the user enters the smoker `device_id`.
 
-1. `discover`
-2. `manual`
-
-For `discover`, Home Assistant temporarily logs in to the broker and listens on the known Asmoke device topics with a single-level wildcard to collect candidate `device_id` values. The user then confirms which discovered candidate belongs to the smoker before the config entry is created. For `manual`, the user enters the `device_id` directly.
-
-The broker host, port, username, password, keepalive, and optional display name are collected once before the route choice. Discovery and manual setup then only decide how the smoker `device_id` is selected.
+The broker host, port, username, password, keepalive, and optional display name are collected first. The `device_id` is copied from the Asmoke app under `Me -> Device` and stored on the Home Assistant config entry.
 
 ## Reauth and options
 
-The integration has a reauth flow for broker credentials and an `OptionsFlowWithReload` for:
+The integration has a reauth flow for broker authentication failures and an options flow for:
 
+- broker host;
+- broker port;
+- MQTT username;
+- MQTT password;
+- MQTT keepalive;
+- `device_id`;
 - `offline_timeout`;
-- `extra_topics`;
 - `debug_logging`.
 
-The options flow does not manage broker credentials.
+When broker connection fields change, the options flow validates the MQTT
+connection before saving. Saved data and options are updated together so the
+config-entry update listener reloads the integration once with the new runtime
+settings.
 
 ## Runtime design
 
@@ -82,8 +85,6 @@ The runtime lives in `AsmokeMqttRuntime` and uses its own `paho-mqtt` client. Th
 - processes status, temperature, result, and roast topics;
 - keeps shared state for entities and diagnostics;
 - can keep loading even when the grill is off.
-
-For discovery, a temporary MQTT client is used only to find a usable `device_id` and any metadata such as grill type or firmware version.
 
 ## Entities and services
 
@@ -114,4 +115,4 @@ The public repository does not contain live broker secrets. The integration no l
 
 ## Main limitation of the current architecture
 
-Onboarding is semi-automatic: `device_id` discovery works after valid broker credentials are entered, but those broker credentials still need to be known. No usable local LAN integration has been found that fully replaces this model.
+Onboarding requires broker credentials and the device ID from the Asmoke app. No usable local LAN integration has been found that fully replaces this model.

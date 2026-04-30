@@ -6,12 +6,12 @@ The current integration supports:
 
 1. installation as a custom integration;
 2. adding the integration through the Home Assistant config flow;
-3. semi-automatic discovery of the `device_id` through temporary MQTT listening;
+3. manual `device_id` entry copied from the Asmoke app;
 4. connecting to the Asmoke cloud MQTT broker;
 5. subscribing to confirmed status, temperatures, and result topics;
 6. creating entities for the main telemetry data;
 7. diagnostics with sensitive data redacted;
-8. an options flow for debug logging, extra topics, and offline timeout;
+8. an options flow for broker settings, device ID, debug logging, and offline timeout;
 9. confirmed start actions for smoke, quick, and roast cooks;
 10. a confirmed stop action for a running cook;
 11. a raw action service for advanced use;

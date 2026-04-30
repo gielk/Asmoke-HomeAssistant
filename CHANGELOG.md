@@ -6,6 +6,14 @@ Changelog entries should stay user-facing, concise, and written in English.
 
 ## Unreleased
 
+## v0.4.7 - 2026-04-30
+
+- Removed device ID auto-selection from onboarding. Setup now requires the user to copy the smoker device ID from the Asmoke app under `Me -> Device`.
+- Removed broad MQTT topic listening paths from the integration runtime and setup flow.
+- Removed configurable extra MQTT topic subscriptions from the options flow.
+- Fixed the Home Assistant options flow crash in newer Home Assistant versions and made broker host, port, username, password, keepalive, device ID, offline timeout, and debug logging editable from Configure.
+- Added an optional dashboard-card setting to hide disconnected probe tiles when Probe A or Probe B is not plugged in.
+
 ## v0.4.6 - 2026-04-30
 
 - Added optional live dashboard-card hiding for stale smoker data after the broker or device has been offline for a configurable delay.
@@ -16,20 +24,20 @@ Changelog entries should stay user-facing, concise, and written in English.
 This stable release combines the `v0.4.5-beta.1` and `v0.4.5-beta.2` changes.
 
 - Removed the optional local credential file and environment-variable prefilling path from onboarding, so broker credentials are always entered through the Home Assistant config flow.
-- Reordered onboarding to validate MQTT credentials first, then let the user choose auto discovery or manual device ID entry.
+- Reordered onboarding to validate MQTT credentials before asking for manual device ID entry.
 - Removed the blocking local auth file read path that could trigger Home Assistant event-loop warnings during setup.
-- Clarified when to use auto discovery versus manual device ID entry, including that the device ID can be copied from the Asmoke app under `Me -> Device`.
+- Clarified that the device ID can be copied from the Asmoke app under `Me -> Device`.
 - Updated user-facing documentation, dashboard preview image, and config-flow tests for the new onboarding flow.
 
 ## v0.4.5-beta.2 - 2026-04-30
 
-- Clarified when to use auto discovery versus manual device ID entry during onboarding.
-- Documented that the device ID can be copied from the Asmoke app under `Me -> Device` when discovery does not find the smoker.
+- Clarified manual device ID entry during onboarding.
+- Documented that the device ID can be copied from the Asmoke app under `Me -> Device`.
 
 ## v0.4.5-beta.1 - 2026-04-30
 
 - Removed the optional local credential file and environment-variable prefilling path from onboarding, so broker credentials are always entered through the Home Assistant config flow.
-- Reordered onboarding to validate MQTT credentials first, then let the user choose auto discovery or manual device ID entry.
+- Reordered onboarding to validate MQTT credentials before asking for manual device ID entry.
 - Removed the blocking local auth file read path that could trigger Home Assistant event-loop warnings during setup.
 - Updated user-facing documentation and config-flow tests for the new onboarding flow.
 
@@ -40,7 +48,7 @@ This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes
 - Added included Asmoke dashboard cards for daily smoker use: live pit control, Quick target time, start/stop actions, grill and probe temperature tiles, BBQ-style temperature history, and cook session history.
 - Made the dashboard cards easier to add by auto-selecting the only configured Asmoke smoker, supporting `device_id`, and resolving related entities from the same Home Assistant device so renamed entities keep working more reliably.
 - Registered the dashboard cards as a Home Assistant frontend module, with documented manual resource fallback for dashboards that do not load the module automatically.
-- Improved onboarding by adding a clearer prerequisites step and changing MQTT auto discovery to collect candidate Asmoke devices and ask the user to confirm the correct smoker before creating the integration entry.
+- Improved onboarding by adding a clearer prerequisites step and clearer manual device ID guidance.
 - Added Home Assistant entity icon translations and local HACS/Home Assistant brand assets for a more polished integration UI.
 - Expanded the public documentation with zero-config dashboard setup guidance, troubleshooting notes, a dashboard preview image, updated dashboard examples, and fixed relative links inside the `docs` folder.
 
@@ -57,7 +65,7 @@ This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes
 
 ## v0.4.4-beta.3 - 2026-04-29
 
-- Changed auto discovery so it collects candidate Asmoke devices and asks the user to confirm the correct one before creating the integration entry.
+- Improved setup validation before creating the integration entry.
 
 ## v0.4.4-beta.2 - 2026-04-29
 
@@ -66,7 +74,7 @@ This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes
 
 ## v0.4.4-beta.1 - 2026-04-29
 
-- Reworked the initial config flow so onboarding starts with a clearer prerequisites step that explains broker credentials are not in the public repository and gives better guidance for auto discovery.
+- Reworked the initial config flow so onboarding starts with a clearer prerequisites step that explains broker credentials are not in the public repository.
 
 ## v0.4.3 - 2026-04-21
 
@@ -75,7 +83,7 @@ This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes
 
 ## v0.4.2 - 2026-04-20
 
-- Fixed the initial config-flow menu so the `Discover Asmoke device` and `Enter device ID manually` options render with readable labels.
+- Fixed the initial config-flow labels so setup renders readable text in Home Assistant.
 
 ## v0.4.1 - 2026-04-20
 
@@ -144,8 +152,8 @@ This stable release combines the `v0.4.4-beta.1` through `v0.4.4-beta.5` changes
 
 ## v0.3.0 - 2026-04-20
 
-- Added automatic `device_id` discovery through a temporary MQTT discovery step.
-- Split the config flow into discover and manual onboarding paths.
+- Added a setup step for entering the smoker `device_id`.
+- Split the config flow into broker settings and device ID entry.
 - Added support for device metadata such as grill type and firmware version when present in payloads.
 
 ## v0.2.0 - 2026-04-20

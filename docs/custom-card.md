@@ -48,6 +48,7 @@ Optional stale/offline display behavior:
 type: custom:asmoke-smoker-card
 hide_offline_data: true
 offline_hide_after: 600
+hide_disconnected_probes: true
 ```
 
 By default, `hide_offline_data` is `false`, so the card keeps showing the normal
@@ -58,6 +59,11 @@ or the pit thermostat unavailable, the live value sections become invisible
 while the card keeps its layout and the header still shows the offline status.
 Set `offline_hide_after: 0` to hide live values immediately when the offline
 state is detected.
+
+By default, `hide_disconnected_probes` is `false`, so Probe A and Probe B keep
+their tiles and show `--` when a probe is not plugged in. Enable
+`hide_disconnected_probes` to remove unavailable probe tiles from the live card
+while leaving Grill 1 and Grill 2 visible.
 
 ### Asmoke Temperature History
 

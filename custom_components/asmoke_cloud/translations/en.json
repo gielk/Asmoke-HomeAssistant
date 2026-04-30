@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to Asmoke Cloud",
-        "description": "Enter the Asmoke MQTT broker settings first. Home Assistant validates these credentials before asking how to identify your smoker. The MQTT username and password are intentionally not stored in the public repository; contact the maintainer directly for setup help if you do not already have them.",
+        "description": "Enter the Asmoke MQTT broker settings first. Home Assistant validates these credentials before asking for the device ID from your smoker. The MQTT username and password are intentionally not stored in the public repository; contact the maintainer directly for setup help if you do not already have them.",
         "data": {
           "name": "Display name",
           "host": "MQTT host",
@@ -14,28 +14,9 @@
           "keepalive": "MQTT keepalive"
         }
       },
-      "setup_method": {
-        "title": "Choose setup method",
-        "description": "Use auto discovery first when your smoker is online and can publish a fresh message. Use manual entry if discovery does not find your smoker, or if you already copied the device ID from the Asmoke app under Me -> Device.",
-        "menu_options": {
-          "discover": "Auto-discover device ID",
-          "manual": "Enter device ID manually"
-        }
-      },
-      "discover": {
-        "title": "Discover Asmoke device",
-        "description": "Home Assistant will listen for Asmoke messages for about 45 seconds using the MQTT credentials you just entered. Before continuing, turn on the smoker and open the Asmoke app on a phone connected to the same local network as the smoker so the device publishes fresh messages. If discovery does not find your smoker, go back and use manual entry; the device ID is shown in the Asmoke app under Me -> Device."
-      },
-      "confirm_discovery": {
-        "title": "Confirm discovered Asmoke device",
-        "description": "Home Assistant found {candidate_count} candidate Asmoke device(s). Select the device that belongs to this Home Assistant entry.\n\nCandidates:\n{candidates}",
-        "data": {
-          "device_id": "Asmoke device"
-        }
-      },
       "manual": {
-        "title": "Enter device ID manually",
-        "description": "Enter the Asmoke device ID for this smoker. You can find it in the Asmoke app under Me -> Device. Manual entry is useful when auto discovery does not find the smoker or when you already copied the device ID from the app.",
+        "title": "Enter Asmoke device ID",
+        "description": "Enter the device ID for your own smoker. In the Asmoke app, open Me -> Device and copy the value shown next to Device ID.",
         "data": {
           "device_id": "Asmoke device ID"
         }
@@ -54,9 +35,7 @@
     },
     "error": {
       "cannot_connect": "Could not connect to the Asmoke MQTT broker",
-      "device_not_found": "No Asmoke device message was received during discovery. You can use manual entry and copy the device ID from the Asmoke app under Me -> Device.",
-      "invalid_auth": "Broker authentication failed. Check the MQTT username and password.",
-      "unknown_device": "Choose one of the discovered Asmoke devices"
+      "invalid_auth": "Broker authentication failed. Check the MQTT username and password."
     },
     "abort": {
       "already_configured": "This Asmoke device is already configured",
@@ -68,11 +47,21 @@
       "init": {
         "title": "Asmoke options",
         "data": {
+          "host": "MQTT host",
+          "port": "MQTT port",
+          "username": "MQTT username",
+          "password": "MQTT password",
+          "keepalive": "MQTT keepalive",
+          "device_id": "Asmoke device ID",
           "offline_timeout": "Offline timeout in seconds",
-          "extra_topics": "Additional MQTT topics to subscribe to",
           "debug_logging": "Enable MQTT debug logging"
         }
       }
+    },
+    "error": {
+      "already_configured": "This Asmoke device is already configured",
+      "cannot_connect": "Could not connect to the Asmoke MQTT broker",
+      "invalid_auth": "Broker authentication failed. Check the MQTT username and password."
     }
   },
   "services": {

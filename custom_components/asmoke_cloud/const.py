@@ -25,7 +25,6 @@ PLATFORMS: list[Platform] = [
 ]
 
 CONF_DEBUG_LOGGING = "debug_logging"
-CONF_EXTRA_TOPICS = "extra_topics"
 CONF_KEEPALIVE = "keepalive"
 CONF_OFFLINE_TIMEOUT = "offline_timeout"
 

@@ -14,10 +14,12 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict:
     coordinator: AsmokeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    options = dict(entry.options)
+    options.pop("extra_topics", None)
 
     return {
         "entry": async_redact_data(dict(entry.data), SENSITIVE_KEYS),
-        "options": dict(entry.options),
+        "options": options,
         "runtime": async_redact_data(
             coordinator.runtime.diagnostics_snapshot(),
             {CONF_PASSWORD, CONF_USERNAME, "client_id"},

@@ -5,10 +5,23 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.asmoke_cloud.const import DOMAIN
-from custom_components.asmoke_cloud.mqtt import AsmokeAuthenticationError, AsmokeDiscoveryError
+from custom_components.asmoke_cloud.config_flow import AsmokeConfigFlow
+from custom_components.asmoke_cloud.const import (
+    CONF_DEBUG_LOGGING,
+    CONF_KEEPALIVE,
+    CONF_OFFLINE_TIMEOUT,
+    DOMAIN,
+)
+from custom_components.asmoke_cloud.mqtt import AsmokeAuthenticationError
 
 CONNECTION_INPUT = {
     "name": "Asmoke Backyard",
@@ -41,14 +54,40 @@ async def _submit_credentials(hass, flow_id: str, user_input=None):
     return result
 
 
-async def _choose_setup_method(hass, flow_id: str, step_id: str):
-    return await hass.config_entries.flow.async_configure(
-        flow_id,
-        {"next_step_id": step_id},
+def _mock_config_entry(**overrides) -> MockConfigEntry:
+    data = {
+        **CONNECTION_INPUT,
+        CONF_DEVICE_ID: "A08241009A12582",
+        **overrides.pop("data", {}),
+    }
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Asmoke Backyard",
+        data=data,
+        options=overrides.pop("options", {}),
+        unique_id=data[CONF_DEVICE_ID],
+        **overrides,
     )
 
 
-async def test_user_flow_validates_credentials_then_shows_setup_menu(
+def _options_input(**overrides) -> dict:
+    return {
+        **CONNECTION_INPUT,
+        CONF_DEVICE_ID: "A08241009A12582",
+        CONF_OFFLINE_TIMEOUT: 900,
+        CONF_DEBUG_LOGGING: False,
+        **overrides,
+    }
+
+
+async def _start_options_flow(hass, entry: MockConfigEntry):
+    entry.add_to_hass(hass)
+    flow = AsmokeConfigFlow.async_get_options_flow(entry)
+    flow.hass = hass
+    return flow
+
+
+async def test_user_flow_validates_credentials_then_shows_manual_device_id_form(
     hass,
     bypass_runtime_start,
 ) -> None:
@@ -59,9 +98,8 @@ async def test_user_flow_validates_credentials_then_shows_setup_menu(
 
     result = await _submit_credentials(hass, result["flow_id"])
 
-    assert result["type"] == "menu"
-    assert set(result["menu_options"]) == {"discover", "manual"}
-    assert result["step_id"] == "setup_method"
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
 
 
 async def test_user_flow_shows_error_on_auth_failure(
@@ -85,7 +123,7 @@ async def test_user_flow_shows_error_on_auth_failure(
     assert result["errors"]["base"] == "invalid_auth"
 
 
-def test_setup_method_menu_option_translations_exist() -> None:
+def test_manual_device_id_translation_uses_app_path() -> None:
     translation_path = (
         Path(__file__).resolve().parents[3]
         / "custom_components"
@@ -95,17 +133,14 @@ def test_setup_method_menu_option_translations_exist() -> None:
     )
     translations = json.loads(translation_path.read_text())
 
-    assert translations["config"]["step"]["setup_method"]["menu_options"] == {
-        "discover": "Auto-discover device ID",
-        "manual": "Enter device ID manually",
-    }
+    steps = translations["config"]["step"]
+    assert set(steps) == {"user", "manual", "reauth_confirm"}
+    assert "Me -> Device" in steps["manual"]["description"]
 
 
 async def test_manual_flow_creates_entry(hass, bypass_runtime_start) -> None:
     result = await _start_user_flow(hass)
     result = await _submit_credentials(hass, result["flow_id"])
-
-    result = await _choose_setup_method(hass, result["flow_id"], "manual")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -120,101 +155,97 @@ async def test_manual_flow_creates_entry(hass, bypass_runtime_start) -> None:
     }
 
 
-async def test_discover_flow_creates_entry(hass, bypass_runtime_start) -> None:
-    result = await _start_user_flow(hass)
-    result = await _submit_credentials(hass, result["flow_id"])
+async def test_options_flow_opens_without_config_entry_setter_error(hass) -> None:
+    entry = _mock_config_entry(options={CONF_OFFLINE_TIMEOUT: 900})
+    flow = await _start_options_flow(hass, entry)
 
-    result = await _choose_setup_method(hass, result["flow_id"], "discover")
+    result = await flow.async_step_init()
+
     assert result["type"] == "form"
-    assert result["step_id"] == "discover"
+    assert result["step_id"] == "init"
 
-    with patch(
-        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
-        new_callable=AsyncMock,
-        return_value=[
-            {
-                CONF_DEVICE_ID: "A08241009A12582",
-                "message_count": 2,
-                "status": "idle",
-                "mode": "QUICK",
-                "battery_level": 47,
-                "grill_temp_1": 135,
-                "grill_temp_2": 159,
-            }
-        ],
-    ) as discover:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
 
-    discover.assert_awaited_once_with(CONNECTION_INPUT, timeout=45.0)
-    assert result["type"] == "form"
-    assert result["step_id"] == "confirm_discovery"
-    assert "A08241009A12582" in result["description_placeholders"]["candidates"]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_DEVICE_ID: "A08241009A12582"},
+async def test_options_flow_updates_connection_device_and_runtime_options(hass) -> None:
+    entry = _mock_config_entry(
+        options={CONF_OFFLINE_TIMEOUT: 900, "extra_topics": "legacy/topic"}
+    )
+    flow = await _start_options_flow(hass, entry)
+    user_input = _options_input(
+        **{
+            CONF_HOST: "mqtt.example.com",
+            CONF_PORT: 1884,
+            CONF_USERNAME: "new-user",
+            CONF_PASSWORD: "new-pass",
+            CONF_KEEPALIVE: 120,
+            CONF_DEVICE_ID: "A08241009A99999",
+            CONF_OFFLINE_TIMEOUT: 1200,
+            CONF_DEBUG_LOGGING: True,
+        }
     )
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Asmoke Backyard"
-    assert result["data"]["device_id"] == "A08241009A12582"
-
-
-async def test_discover_flow_requires_user_to_choose_candidate(
-    hass,
-    bypass_runtime_start,
-) -> None:
-    result = await _start_user_flow(hass)
-    result = await _submit_credentials(hass, result["flow_id"])
-    result = await _choose_setup_method(hass, result["flow_id"], "discover")
-
     with patch(
-        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
+        "custom_components.asmoke_cloud.config_flow.async_validate_broker_connection",
         new_callable=AsyncMock,
-        return_value=[
-            {CONF_DEVICE_ID: "A08241009A12582", "message_count": 3},
-            {CONF_DEVICE_ID: "A08241009A99999", "message_count": 1},
-        ],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
+    ) as validate:
+        result = await flow.async_step_init(user_input)
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "confirm_discovery"
-    assert result["description_placeholders"]["candidate_count"] == "2"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_DEVICE_ID: "A08241009A99999"},
+    validate.assert_awaited_once_with(
+        {
+            **CONNECTION_INPUT,
+            CONF_HOST: "mqtt.example.com",
+            CONF_PORT: 1884,
+            CONF_USERNAME: "new-user",
+            CONF_PASSWORD: "new-pass",
+            CONF_KEEPALIVE: 120,
+            CONF_DEVICE_ID: "A08241009A99999",
+        }
     )
-
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_DEVICE_ID] == "A08241009A99999"
+    assert entry.data[CONF_HOST] == "mqtt.example.com"
+    assert entry.data[CONF_PORT] == 1884
+    assert entry.data[CONF_USERNAME] == "new-user"
+    assert entry.data[CONF_PASSWORD] == "new-pass"
+    assert entry.data[CONF_KEEPALIVE] == 120
+    assert entry.data[CONF_DEVICE_ID] == "A08241009A99999"
+    assert entry.unique_id == "A08241009A99999"
+    assert entry.options[CONF_OFFLINE_TIMEOUT] == 1200
+    assert entry.options[CONF_DEBUG_LOGGING] is True
+    assert "extra_topics" not in entry.options
 
 
-async def test_discover_flow_shows_error_when_no_device_found(
-    hass,
-    bypass_runtime_start,
-) -> None:
-    result = await _start_user_flow(hass)
-    result = await _submit_credentials(hass, result["flow_id"])
-    result = await _choose_setup_method(hass, result["flow_id"], "discover")
+async def test_options_flow_shows_auth_error_when_new_credentials_fail(hass) -> None:
+    entry = _mock_config_entry(options={CONF_OFFLINE_TIMEOUT: 900})
+    flow = await _start_options_flow(hass, entry)
 
     with patch(
-        "custom_components.asmoke_cloud.config_flow.async_discover_devices",
+        "custom_components.asmoke_cloud.config_flow.async_validate_broker_connection",
         new_callable=AsyncMock,
-        side_effect=AsmokeDiscoveryError,
+        side_effect=AsmokeAuthenticationError,
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
+        result = await flow.async_step_init(
+            _options_input(**{CONF_PASSWORD: "bad-pass"})
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "discover"
-    assert result["errors"]["base"] == "device_not_found"
+    assert result["step_id"] == "init"
+    assert result["errors"]["base"] == "invalid_auth"
+    assert entry.data[CONF_PASSWORD] == "test-pass"
+
+
+async def test_options_flow_skips_broker_validation_for_runtime_options_only(
+    hass,
+) -> None:
+    entry = _mock_config_entry(options={CONF_OFFLINE_TIMEOUT: 900})
+    flow = await _start_options_flow(hass, entry)
+
+    with patch(
+        "custom_components.asmoke_cloud.config_flow.async_validate_broker_connection",
+        new_callable=AsyncMock,
+    ) as validate:
+        result = await flow.async_step_init(
+            _options_input(**{CONF_OFFLINE_TIMEOUT: 1800})
+        )
+
+    validate.assert_not_awaited()
+    assert result["type"] == "create_entry"
+    assert entry.options[CONF_OFFLINE_TIMEOUT] == 1800

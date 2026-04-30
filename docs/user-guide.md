@@ -46,26 +46,18 @@ The repository includes the following documentation for the current entity set:
 3. Click `Add Integration`.
 4. Choose `Asmoke Cloud`.
 5. Enter the MQTT broker settings. Host, port, and keepalive are prefilled with known cloud defaults; username and password must be entered by you.
-6. After Home Assistant validates the broker connection, choose one of these routes:
-   - `Auto-discover device ID`
-   - `Enter device ID manually`
-7. For auto discovery:
-   - turn on the smoker;
-   - open the Asmoke app on a phone connected to the same local network as the smoker;
-   - wait for Home Assistant to collect candidate Asmoke devices for about 45 seconds;
-   - select the discovered device that belongs to your smoker.
-8. For manual entry:
+6. After Home Assistant validates the broker connection, enter the device ID for your own smoker:
    - open the Asmoke app;
    - go to `Me -> Device`;
    - copy the value shown as `Device ID`;
    - enter that value in Home Assistant.
-9. Complete the config flow.
+7. Complete the config flow.
 
 ## Where do these values come from?
 
 You do not get these values from Home Assistant itself. In practice, the required connection details need to come from prior setup information you already have or direct setup help from the maintainer.
 
-In practice the integration needs the following values. The `device_id` can be entered manually or discovered after the broker credentials are accepted.
+In practice the integration needs the following values. Copy `device_id` from the Asmoke app under `Me -> Device`.
 
 - `device_id`
 - `host`
@@ -74,11 +66,9 @@ In practice the integration needs the following values. The `device_id` can be e
 - `password`
 - `keepalive`
 
-If you do not have them yet, do not expect to find them in the public repository. The intended path is to request setup help from the maintainer instead of trying to discover public credentials in the repo.
+If you do not have them yet, do not expect to find them in the public repository. The intended path is to request setup help from the maintainer instead of looking for public credentials in the repo.
 
-The integration can try to discover `device_id` automatically by temporarily listening for Asmoke device messages, but that only works if Home Assistant can already log in with valid broker credentials and the smoker publishes a fresh message during discovery. Discovery shows candidates for confirmation before creating the config entry.
-
-Use manual device ID entry when discovery does not find the smoker, when the smoker is offline, or when you already have the ID from the Asmoke app. In the app, open `Me -> Device`; the device card shows `Device ID` and usually includes a copy button next to it.
+In the Asmoke app, open `Me -> Device`. The device card shows `Device ID` and usually includes a copy button next to it. Use only the device ID for your own smoker.
 
 This repository intentionally does not ship vendor-shared MQTT credentials as public defaults. The integration no longer reads local credential files or environment variables during onboarding; enter the broker settings in the Home Assistant config flow.
 
@@ -455,18 +445,24 @@ Check:
 - whether the smoker has published messages recently;
 - whether `broker connected` is on.
 
-### Discovery finds no device
+### Settings or credentials changed
 
-Check:
+Open the integration options from Settings -> Devices & services -> Asmoke
+Cloud -> Configure. You can update:
 
-- whether the broker credentials are correct;
-- whether the grill is on or has just been woken through the app;
-- whether Home Assistant has internet access;
-- whether a fresh status message was actually sent by the smoker during discovery.
+- broker host;
+- broker port;
+- MQTT username;
+- MQTT password;
+- MQTT keepalive;
+- Asmoke device ID;
+- offline timeout;
+- debug logging.
 
-### Credentials changed
-
-In this version, the options flow only manages `offline_timeout`, `extra_topics`, and `debug_logging`. If broker credentials changed, add the integration again with the new values. Only use the reauth flow if Home Assistant explicitly offers it.
+When broker host, port, username, password, or keepalive changes, Home
+Assistant validates the MQTT connection before saving the new settings. Changing
+the device ID is useful when you replace the controller or typed the ID
+incorrectly during setup.
 
 ## What already works and what does not yet
 

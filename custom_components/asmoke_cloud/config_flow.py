@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -17,7 +17,6 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DEBUG_LOGGING,
-    CONF_EXTRA_TOPICS,
     CONF_KEEPALIVE,
     CONF_OFFLINE_TIMEOUT,
     DEFAULT_BROKER_HOST,
@@ -29,8 +28,6 @@ from .const import (
 from .mqtt import (
     AsmokeAuthenticationError,
     AsmokeConnectionError,
-    AsmokeDiscoveryError,
-    async_discover_devices,
     async_validate_broker_connection,
 )
 
@@ -67,40 +64,15 @@ def _connection_config(values: Mapping[str, Any]) -> dict[str, Any]:
     return config
 
 
-def _candidate_label(candidate: Mapping[str, Any]) -> str:
-    parts = [str(candidate[CONF_DEVICE_ID])]
-
-    if message_count := candidate.get("message_count"):
-        parts.append(f"{message_count} messages")
-    if status := candidate.get("status"):
-        parts.append(f"status {status}")
-    if mode := candidate.get("mode"):
-        parts.append(f"mode {mode}")
-    battery = candidate.get("battery_level")
-    if battery is not None:
-        parts.append(f"battery {battery}%")
-
-    grill_temps = [
-        str(value)
-        for value in (candidate.get("grill_temp_1"), candidate.get("grill_temp_2"))
-        if value is not None
-    ]
-    if grill_temps:
-        parts.append(f"grill {'/'.join(grill_temps)} C")
-
-    return " - ".join(parts)
-
-
 class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
         self._connection_config: dict[str, Any] | None = None
-        self._discovery_candidates: dict[str, dict[str, Any]] = {}
         self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         return AsmokeOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -118,90 +90,12 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._connection_config = connection_config
-                return await self.async_step_setup_method()
+                return await self.async_step_manual()
 
         return self.async_show_form(
             step_id="user",
             data_schema=self._connection_schema(defaults),
             errors=errors,
-        )
-
-    async def async_step_setup_method(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if self._connection_config is None:
-            return await self.async_step_user()
-
-        return self.async_show_menu(
-            step_id="setup_method",
-            menu_options=["discover", "manual"],
-        )
-
-    async def async_step_discover(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if self._connection_config is None:
-            return await self.async_step_user()
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                discovered = await async_discover_devices(
-                    self._connection_config,
-                    timeout=45.0,
-                )
-            except AsmokeAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except AsmokeDiscoveryError:
-                errors["base"] = "device_not_found"
-            except AsmokeConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                self._discovery_candidates = {
-                    str(candidate[CONF_DEVICE_ID]): candidate
-                    for candidate in discovered
-                }
-                return await self.async_step_confirm_discovery()
-
-        return self.async_show_form(
-            step_id="discover",
-            data_schema=vol.Schema({}),
-            errors=errors,
-        )
-
-    async def async_step_confirm_discovery(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if self._connection_config is None or not self._discovery_candidates:
-            return await self.async_step_discover()
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            device_id = str(user_input[CONF_DEVICE_ID])
-            if device_id not in self._discovery_candidates:
-                errors["base"] = "unknown_device"
-            else:
-                merged = {**self._connection_config, CONF_DEVICE_ID: device_id}
-                await self.async_set_unique_id(device_id)
-                self._abort_if_unique_id_configured()
-
-                title = str(merged.get(CONF_NAME) or f"Asmoke {device_id}")
-                return self.async_create_entry(title=title, data=merged)
-
-        candidate_labels = [
-            _candidate_label(candidate)
-            for candidate in self._discovery_candidates.values()
-        ]
-        return self.async_show_form(
-            step_id="confirm_discovery",
-            data_schema=self._confirm_discovery_schema(),
-            errors=errors,
-            description_placeholders={
-                "candidate_count": str(len(candidate_labels)),
-                "candidates": "\n".join(candidate_labels),
-            },
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -291,19 +185,6 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-    def _confirm_discovery_schema(self) -> vol.Schema:
-        options = {
-            device_id: _candidate_label(candidate)
-            for device_id, candidate in self._discovery_candidates.items()
-        }
-        default = next(iter(options))
-
-        return vol.Schema(
-            {
-                vol.Required(CONF_DEVICE_ID, default=default): vol.In(options),
-            }
-        )
-
     def _manual_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
         return vol.Schema(
             {
@@ -341,32 +222,138 @@ class AsmokeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class AsmokeOptionsFlow(OptionsFlowWithReload):
+class AsmokeOptionsFlow(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
-        self.config_entry = config_entry
+        self._entry = config_entry
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        entry = self._entry
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            new_data = self._entry_data_from_input(entry.data, user_input)
+            new_options = self._options_from_input(entry.options, user_input)
+            device_id = str(new_data[CONF_DEVICE_ID])
+
+            if self._device_id_in_use(entry, device_id):
+                errors[CONF_DEVICE_ID] = "already_configured"
+            elif self._mqtt_settings_changed(entry.data, new_data):
+                try:
+                    await async_validate_broker_connection(new_data)
+                except AsmokeAuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except AsmokeConnectionError:
+                    errors["base"] = "cannot_connect"
+
+            if not errors:
+                title = str(new_data.get(CONF_NAME) or f"Asmoke {device_id}")
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=new_data,
+                    options=new_options,
+                    title=title,
+                    unique_id=device_id,
+                )
+                return self.async_create_entry(title="", data=new_options)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_OFFLINE_TIMEOUT): int,
-                        vol.Optional(CONF_EXTRA_TOPICS): str,
-                        vol.Required(CONF_DEBUG_LOGGING): bool,
-                    }
-                ),
-                {
-                    CONF_OFFLINE_TIMEOUT: self.config_entry.options.get(
-                        CONF_OFFLINE_TIMEOUT, DEFAULT_OFFLINE_TIMEOUT
-                    ),
-                    CONF_EXTRA_TOPICS: self.config_entry.options.get(CONF_EXTRA_TOPICS, ""),
-                    CONF_DEBUG_LOGGING: self.config_entry.options.get(
-                        CONF_DEBUG_LOGGING, False
-                    ),
-                },
+            data_schema=self._options_schema(entry, user_input),
+            errors=errors,
+        )
+
+    def _options_schema(
+        self,
+        entry: ConfigEntry,
+        user_input: Mapping[str, Any] | None = None,
+    ) -> vol.Schema:
+        data_defaults = _connection_defaults({**entry.data, **(user_input or {})})
+        options_defaults = {
+            CONF_DEVICE_ID: _string_default(
+                (user_input or {}).get(CONF_DEVICE_ID, entry.data.get(CONF_DEVICE_ID))
             ),
+            CONF_OFFLINE_TIMEOUT: _int_default(
+                (user_input or {}).get(
+                    CONF_OFFLINE_TIMEOUT,
+                    entry.options.get(CONF_OFFLINE_TIMEOUT),
+                ),
+                DEFAULT_OFFLINE_TIMEOUT,
+            ),
+            CONF_DEBUG_LOGGING: bool(
+                (user_input or {}).get(
+                    CONF_DEBUG_LOGGING,
+                    entry.options.get(CONF_DEBUG_LOGGING, False),
+                )
+            ),
+        }
+
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    default=data_defaults[CONF_HOST],
+                ): vol.All(str, vol.Length(min=1)),
+                vol.Required(
+                    CONF_PORT,
+                    default=data_defaults[CONF_PORT],
+                ): vol.All(int, vol.Range(min=1, max=65535)),
+                vol.Required(
+                    CONF_USERNAME,
+                    default=data_defaults[CONF_USERNAME],
+                ): vol.All(str, vol.Length(min=1)),
+                vol.Required(
+                    CONF_PASSWORD,
+                    default=data_defaults[CONF_PASSWORD],
+                ): vol.All(str, vol.Length(min=1)),
+                vol.Required(
+                    CONF_KEEPALIVE,
+                    default=data_defaults[CONF_KEEPALIVE],
+                ): vol.All(int, vol.Range(min=5, max=3600)),
+                vol.Required(
+                    CONF_DEVICE_ID,
+                    default=options_defaults[CONF_DEVICE_ID],
+                ): vol.All(str, vol.Length(min=1)),
+                vol.Required(
+                    CONF_OFFLINE_TIMEOUT,
+                    default=options_defaults[CONF_OFFLINE_TIMEOUT],
+                ): vol.All(int, vol.Range(min=30, max=86400)),
+                vol.Required(
+                    CONF_DEBUG_LOGGING,
+                    default=options_defaults[CONF_DEBUG_LOGGING],
+                ): bool,
+            }
+        )
+
+    def _entry_data_from_input(
+        self,
+        current: Mapping[str, Any],
+        user_input: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        connection = _connection_config({**current, **user_input})
+        device_id = str(user_input[CONF_DEVICE_ID]).strip()
+        return {**current, **connection, CONF_DEVICE_ID: device_id}
+
+    def _options_from_input(
+        self,
+        current: Mapping[str, Any],
+        user_input: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        options = dict(current)
+        options.pop("extra_topics", None)
+        options[CONF_OFFLINE_TIMEOUT] = int(user_input[CONF_OFFLINE_TIMEOUT])
+        options[CONF_DEBUG_LOGGING] = bool(user_input[CONF_DEBUG_LOGGING])
+        return options
+
+    def _mqtt_settings_changed(
+        self,
+        current: Mapping[str, Any],
+        new_data: Mapping[str, Any],
+    ) -> bool:
+        keys = (CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_KEEPALIVE)
+        return any(current.get(key) != new_data.get(key) for key in keys)
+
+    def _device_id_in_use(self, entry: ConfigEntry, device_id: str) -> bool:
+        return any(
+            other.entry_id != entry.entry_id and other.unique_id == device_id
+            for other in self.hass.config_entries.async_entries(DOMAIN)
         )
